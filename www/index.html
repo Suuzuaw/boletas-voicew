@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boletas AXS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#d4202a">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#17202b;--mut:#5d6877;--line:#d9dde3;--red:#d4202a;--rs:#fbe9ea;--ok:#1d7a4d;--os:#e3f3ea;--wn:#8a5a00;--ws:#fdf0d5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b222b;--ink:#eef1f5;--mut:#9aa5b4;--line:#2d3744;--rs:#3a1c1f;--os:#163023;--ws:#3b2f12;--ok:#5fcf97;--wn:#f0c263;--red:#ff5a62}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b222b;--ink:#eef1f5;--mut:#9aa5b4;--line:#2d3744;--rs:#3a1c1f;--os:#163023;--ws:#3b2f12;--ok:#5fcf97;--wn:#f0c263;--red:#ff5a62}
+html{scroll-padding-top:env(safe-area-inset-top,0px);color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Barlow,system-ui,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:0 12px 84px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;z-index:5;border-bottom:1px solid var(--line)}
+h1{font:700 24px 'Barlow Condensed',Barlow,sans-serif;margin:0}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+.who{width:auto;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;display:block;width:100%;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.chip{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--ws);color:var(--wn)}
+.chip.ok{background:var(--os);color:var(--ok)}.chip.red{background:var(--rs);color:var(--red)}
+.mut{color:var(--mut);font-size:14px}
+.btn{border:0;border-radius:10px;padding:12px 14px;font:600 16px Barlow,sans-serif;cursor:pointer;background:var(--red);color:#fff;width:100%}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.back{background:none;border:0;color:var(--red);font:600 16px Barlow,sans-serif;padding:8px 4px;cursor:pointer}
+.tb{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tb button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 11px;font:600 15px Barlow,sans-serif;cursor:pointer}
+.tb button.tl{color:var(--red);border:2px solid var(--red);font-size:19px;padding:8px 14px;min-height:44px}.tb button.tl.on{background:var(--red);color:#fff}
+.tb button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.wrap{overflow:auto;touch-action:pan-x pan-y pinch-zoom;overscroll-behavior:contain;border:1px solid var(--line);margin-top:8px;background:#888;max-height:calc(100vh - 190px);-webkit-overflow-scrolling:touch}
+.page{position:relative;background-size:100% 100%;background-color:#fff;container-type:inline-size}
+.f{touch-action:pan-x pan-y pinch-zoom;position:absolute;display:flex;align-items:center;font-size:calc(var(--fs)*1cqw);color:#000;font-weight:500;overflow:hidden;white-space:nowrap;cursor:pointer;padding:0 .3em;line-height:1.1}
+.f.ta{align-items:flex-start;white-space:pre-wrap;padding-top:.2em}
+.f.e{outline:1.5px dashed rgba(212,32,42,.7);background:rgba(212,32,42,.08)}
+.f.sg img{width:100%;height:100%;object-fit:contain}
+.f.cq{overflow:visible;padding:0}.f.cq.on{outline:2px dashed #d4202a}
+.mk{position:absolute;transform:translate(-50%,-50%);font-style:normal;font-weight:700;color:#d4202a;line-height:1;touch-action:none;cursor:grab;padding:.1em .25em;font-size:calc(var(--fs)*1cqw)}.mk.sel{outline:2px dashed #d4202a;background:rgba(212,32,42,.14);border-radius:6px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));z-index:6}
+.bar .in{max-width:720px;margin:0 auto;display:flex;gap:10px}
+#sh{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);border-top:2px solid var(--red);padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(0,0,0,.25)}
+#sh[hidden]{display:none}
+#sh .in{max-width:720px;margin:0 auto;display:grid;gap:10px}
+.step{display:flex;gap:8px}.step button{width:56px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:26px;cursor:pointer}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+canvas.sig{width:100%;height:190px;border:1.5px dashed var(--mut);border-radius:8px;background:#fff;touch-action:none;display:block}
+.msg{padding:10px;border-radius:8px;background:var(--rs);color:var(--red);margin:10px 0;font-weight:500}
+img.out{width:100%;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="sh" hidden></div>
+<script src="supabase.js"></script><script src="pdf.min.js"></script><script src="config.js"></script>
+<script>
+const C={"pex": {"w": 595.32, "h": 841.92, "F": [["como", 96, 63, 34, 14, "sel", "¿Firmó comodato?", 9], ["m", 109, 251.5, 33, 10, "mat", "Equipo", 8], ["m", 109, 261.5, 33, 10, "mat", "Cable", 8], ["m", 109, 271.5, 33, 10, "mat", "Cable UTP", 8], ["m", 109, 281.5, 33, 10, "mat", "Cable interno", 8], ["m", 109, 292.5, 33, 10, "mat", "Roseta", 8], ["m", 109, 302.5, 33, 10, "mat", "Tensores", 8], ["m", 109, 312.5, 33, 10, "mat", "Conector mecánico", 8], ["m", 109, 322.5, 33, 10, "mat", "Acoplador", 8], ["m", 109, 332.5, 33, 10, "mat", "Patch cord", 8], ["m", 109, 343.5, 33, 10, "mat", "Precintos 10 cm", 8], ["m", 109, 353.5, 33, 10, "mat", "Precintos 20 cm", 8], ["m", 109, 363.5, 33, 10, "mat", "Grampas", 8], ["m", 109, 374.5, 33, 10, "mat", "Anilla guía", 8], ["m", 109, 384.5, 33, 10, "mat", "Abrazadera BAP", 8], ["m", 109, 394.5, 33, 10, "mat", "Cable acero", 8], ["m", 109, 404.5, 33, 10, "mat", "Aislador", 8], ["m", 109, 414.5, 33, 10, "mat", "Rack", 8], ["m", 109, 425.5, 33, 10, "mat", "Morceto", 8], ["m", 109, 435.5, 33, 10, "mat", "Malla preformada", 8], ["m", 109, 445.5, 33, 10, "mat", "Malla lazo", 8], ["m", 109, 455.5, 33, 10, "mat", "Cable canal", 8], ["m", 109, 465.5, 33, 10, "mat", "Conector UY", 8], ["m", 109, 476.5, 33, 10, "mat", "Conectores RJ45", 8], ["m", 109, 486.5, 33, 10, "mat", "Capuchones", 8], ["m", 109, 496.5, 33, 10, "mat", "Cinta aislante", 8], ["rOlt", 255, 187, 65, 17, "t", "Ruta modificada: OLT", 10], ["rOdn", 322, 187, 36, 17, "t", "Ruta modificada: ODN", 10], ["rNap", 359, 187, 33, 17, "t", "Ruta modificada: NAP", 10], ["rPo", 393, 187, 33, 17, "t", "Ruta modificada: PO", 10], ["cq", 158, 253, 395, 262, "cq", "Croquis", 20], ["mo", 39, 539, 32, 19, "t", "Modelo del equipo", 8], ["se", 73, 539, 173, 19, "t", "Serie", 9], ["af", 249, 539, 140, 19, "t", "Activo fijo", 9], ["pNap", 392, 549, 64, 26, "n", "Potencia NAP (dBm)", 10], ["pUsu", 392, 590, 64, 26, "n", "Potencia usuario (dBm)", 10], ["postes", 527, 539, 34, 20, "n", "Postes utilizados", 10], ["postesEq", 527, 560, 34, 19, "n", "Postes equipados", 10], ["mensajero", 527, 580, 34, 20, "n", "Apoyo en mensajero", 10], ["ductos", 527, 601, 34, 20, "t", "¿Ductos o cámaras?", 9], ["obs", 38, 632, 523, 56, "ta", "Observación de instalación", 9], ["empresa", 108, 701, 134, 19, "t", "Empresa", 10], ["tecnico", 108, 722, 134, 19, "t", "Técnico", 10], ["tecnico2", 108, 742, 134, 19, "t", "Segundo técnico (opcional)", 10], ["fecha", 292, 701, 94, 19, "dt", "Fecha", 10], ["hi", 300, 722, 86, 19, "tm", "Hora de inicio", 10], ["hf", 294, 742, 92, 19, "tm", "Hora final", 10], ["firma", 389, 701, 171, 27, "sg", "Firma del cliente", 0], ["cliente", 389, 731, 171, 26, "t", "Nombre del cliente", 12], ["dist", 284, 763, 277, 17, "t", "Distancia del cable (inicio − final)", 10]]}, "baja": {"w": 595.32, "h": 841.92, "F": [["cabR", 365, 210, 58, 19, "n", "Cable recuperado (m)", 11], ["tens", 426, 210, 57, 19, "n", "Tensor recuperado", 11], ["conec", 486, 210, 47, 19, "n", "Conector recuperado", 11], ["postesL", 536, 210, 44, 19, "n", "Postes liberados", 11], ["onu", 100, 242.3, 196, 19, "t", "ONU instalada", 9], ["stb", 100, 261.3, 196, 19, "t", "STB instalado", 9], ["mod0", 302, 242.3, 56, 19, "t", "Modelo", 8], ["rec0", 361, 242.3, 210, 19, "t", "Equipo recuperado", 9], ["mod1", 302, 261.3, 56, 19, "t", "Modelo", 8], ["rec1", 361, 261.3, 210, 19, "t", "Equipo recuperado", 9], ["mod2", 302, 280.3, 56, 19, "t", "Modelo", 8], ["rec2", 361, 280.3, 210, 19, "t", "Equipo recuperado", 9], ["mod3", 302, 299.3, 56, 19, "t", "Modelo", 8], ["rec3", 361, 299.3, 210, 19, "t", "Equipo recuperado", 9], ["mod4", 302, 318.3, 56, 19, "t", "Modelo", 8], ["rec4", 361, 318.3, 210, 19, "t", "Equipo recuperado", 9], ["nota", 57, 340, 512, 44, "ta", "Nota de la baja", 11], ["cq", 55, 386, 516, 182, "cq", "Croquis", 20], ["obs", 54, 581, 518, 58, "ta", "Observación de instalación", 10], ["empresa", 105, 657, 140, 21, "t", "Empresa", 10], ["tecnico", 105, 680, 140, 21, "t", "Técnico", 10], ["tecnico2", 105, 702, 140, 21, "t", "Segundo técnico (opcional)", 10], ["fecha", 292, 657, 94, 21, "dt", "Fecha", 10], ["hi", 300, 680, 86, 21, "tm", "Hora de inicio", 10], ["hf", 294, 702, 92, 21, "tm", "Hora final", 10], ["firma", 388, 657, 183, 30, "sg", "Firma del cliente", 0], ["cliente", 388, 692, 183, 30, "t", "Nombre del cliente", 12]]}, "inst": {"w": 612, "h": 792, "F": [["mo", 87, 486, 75, 14, "t", "Equipo (modelo)", 8], ["se", 163, 486, 200, 14, "t", "Serie", 9], ["af", 365, 486, 112, 14, "t", "Activo fijo", 9], ["obsF", 69, 606, 440, 26, "ta", "Observaciones", 9], ["maq", 461, 592, 60, 13, "t", "N° Maq.", 8], ["fecha", 226, 661, 35, 17, "dd", "Fecha", 10], ["fecha", 263, 661, 35, 17, "mo", "Fecha", 10], ["hf", 346, 661, 24, 17, "hh", "Hora final", 10], ["hf", 376, 661, 26, 17, "mi", "Hora final", 10], ["firmaT", 76, 678, 150, 28, "sg", "Firma del técnico (AXS)", 0], ["tecnico", 122, 722, 140, 14, "t", "Nombre del técnico", 9], ["firma", 382, 676, 150, 28, "sg", "Firma del usuario", 0], ["cliente", 426, 719, 130, 14, "t", "Nombre del usuario", 9]]}};
+const NM={pex:'Boleta PEX',inst:'Formulario de instalación',baja:'Boleta de baja'};
+let ORD=[];
+const MOT=['Cliente no contactado','Nadie en el lugar','Cliente se negó','Otro'];
+let DB={},tec='',me=null,BG={},cur=null,pg=null,zm=1.8,tool='',shots=[],msg='',ed=null,sgs=0,pend=null,sel=null,drag=null;
+try{DB=JSON.parse(localStorage.getItem('boletas_v2')||'{}')}catch(e){DB={}}
+try{ORD=JSON.parse(localStorage.getItem('ord_v1')||'[]')}catch(e){ORD=[]}
+const save=()=>{try{localStorage.setItem('boletas_v2',JSON.stringify(DB))}catch(e){}};
+const D=id=>DB[id]||(DB[id]={m:{},mk:[],estado:'asignada',empresa:'Voicewave',tecnico:tec});
+const O=id=>ORD.find(o=>o.id===id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const app=document.getElementById('app'),sh=document.getElementById('sh');
+const chip=e=>e==='cerrada'?'<span class="chip ok">Cerrada</span>':e==='en_proceso'?'<span class="chip">En proceso</span>':'<span class="chip red">Pendiente</span>';
+const TY=t=>t==='dd'||t==='mo'?'dt':t==='hh'||t==='mi'?'tm':t;
+
+function val(f,d){const k=f[0],t=f[5];if(t==='mat')return d.m[f[6]]||'';const v=d[k];if(!v)return '';
+ if(t==='dt')return v.split('-').reverse().join('/');if(t==='dd')return v.split('-')[2];if(t==='mo')return v.split('-')[1];
+ if(t==='hh')return v.split(':')[0];if(t==='mi')return v.split(':')[1];return v}
+
+function lista(){let h=`<div class="top row"><h1>Mis boletas</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Importar PDF</button><button data-a="sync">Sincronizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden>
+<p class="mut">Cada boleta se abre sobre el formato original de AXS. Se guarda en este teléfono aunque no haya señal.</p>`;
+ ORD.forEach(o=>{h+=`<button class="card" data-a="open" data-id="${o.id}"><div class="row"><b style="font-size:18px">${o.id}</b>${chip(D(o.id).estado)}</div><div>${o.cliente}</div><div class="mut">${o.label}</div></button>`});
+ return h+(ORD.length?'':'<p class="mut">Aún no hay boletas. Toca “Importar PDF” y elige los PDF que te asignó AXS.</p>')+(msg?`<div class="msg">${msg}</div>`:'')}
+
+function pageHTML(){const F=C[pg],d=D(cur);let h=`<div class="page" style="width:${zm*100}%;aspect-ratio:${F.w}/${F.h};background-image:url(${BG[cur+'|'+pg]||''})">`;
+ F.F.forEach((f,i)=>{const[k,x,y,w,hh,t,l,fs]=f,v=val(f,d);let inn='';
+  if(t==='sg')inn=d[k]?`<img src="${d[k]}">`:'';
+  else if(t==='cq')inn=d.mk.map((m,j)=>m.p!==pg?'':`<i class="mk${j===sel?' sel':''}" data-mi="${j}" style="left:${(m.x-x)/w*100}%;top:${(m.y-y)/hh*100}%;font-size:calc(var(--fs)*1cqw*${m.z||1})">${esc(m.s)}</i>`).join('');
+  else inn=esc(v);
+  const e=t!=='cq'&&!inn?' e':'',on=t==='cq'&&tool?' on':'';
+  h+=`<div class="f ${t}${e}${on}" data-i="${i}" style="left:${x/F.w*100}%;top:${y/F.h*100}%;width:${w/F.w*100}%;height:${hh/F.h*100}%;--fs:${(fs||14)/F.w*100}">${inn}</div>`});
+ return h+'</div>'}
+
+function detalle(){const o=O(cur),d=D(cur),fs=o.forms;
+ let h=`<div class="top"><div class="row"><button class="back" data-a="back">‹ Boletas</button><b>${o.id}</b>${chip(d.estado)}</div><div class="tb">`;
+ if(fs.length>1)fs.forEach(f=>h+=`<button class="${f===pg?'on':''}" data-a="tab" data-f="${f}">${NM[f]}</button>`);
+ h+=`<button data-a="z-">−</button><button data-a="z+">+</button><button data-a="pl">◀</button><button data-a="pr">▶</button><span class="mut" style="align-self:center">Toca una casilla roja para llenarla</span></div><div class="tb"><span class="mut" style="align-self:center">Croquis:</span>`;
+ [['●','Poste'],['✕','NAP'],['✓','Caja'],['T','Texto'],['Borrar','Borrar']].forEach(([s,l])=>h+=`<button class="tl ${tool===s?'on':''}" data-a="tool" data-s="${s}">${s==='Borrar'?'Borrar':s+' '+l}</button>`);
+ const sm=sel!=null&&d.mk[sel]&&d.mk[sel].p===pg?d.mk[sel]:null;
+ if(sm)h+=`<span class="mut" style="align-self:center">Marca:</span><button class="tl" data-a="sz-">Más chica</button><button class="tl" data-a="sz+">Más grande</button>${'●✕✓'.includes(sm.s)?'':'<button class="tl" data-a="medit">Texto</button>'}<button class="tl" data-a="mdel">Quitar</button><button class="tl" data-a="sdone">Listo</button>`;
+ h+=`</div></div><div class="wrap" id="wr">${pageHTML()}</div>`;
+ if(msg)h+=`<div class="msg">${msg}</div>`;
+ shots.forEach(s=>h+=`<h3>${s.n}</h3><img class="out" src="${s.u}" alt="${s.n}">`);
+ if(shots.length)h+='<p class="mut">Mantén presionada cada imagen para guardarla o enviarla al grupo de Teams.</p><button class="btn alt" data-a="share">Compartir</button>';
+ return h+'<div class="bar"><div class="in"><button class="btn alt" data-a="img">Generar imagen</button><button class="btn" data-a="close">Cerrar boleta</button></div></div>'}
+
+function paint(){const w=document.getElementById('wr'),sx=w?w.scrollLeft:0,sy=w?w.scrollTop:0,py=scrollY;
+ app.innerHTML=!me?login():cur?detalle():lista();const n=document.getElementById('wr');if(n){n.scrollLeft=sx;n.scrollTop=sy}scrollTo(0,py)}
+
+function openEd(fl){const[k,,,,,t,l]=fl,d=D(cur),T=TY(t);ed=fl;sgs=0;let b='';
+ if(T==='mat')b=`<div class="step"><button data-a="m-">−</button><input id="ei" type="number" inputmode="decimal" min="0" value="${d.m[l]||''}"><button data-a="m+">+</button></div>`;
+ else if(T==='ta')b=`<textarea id="ei" rows="4">${esc(d[k])}</textarea>`;
+ else if(T==='sel')b='<div class="g2"><button class="btn alt" data-a="pick" data-v="Sí">Sí</button><button class="btn alt" data-a="pick" data-v="No">No</button></div>';
+ else if(T==='sg')b='<canvas class="sig" id="sg"></canvas><button class="back" data-a="clr">Borrar firma</button>';
+ else b=`<input id="ei" type="${T==='dt'?'date':T==='tm'?'time':T==='n'?'number':'text'}" ${T==='n'?'inputmode="decimal"':''} value="${esc(d[k]||'')}">`+(T==='tm'?'<button class="back" data-a="now">Poner hora actual</button>':'');
+ sh.innerHTML=`<div class="in"><div class="row"><b>${l}</b><button class="back" data-a="x">Cancelar</button></div>${b}${T==='sel'?'':'<button class="btn" data-a="ok">Listo</button>'}</div>`;
+ sh.hidden=false;if(T==='sg')initSig();else{const i=document.getElementById('ei');if(i&&T!=='dt'&&T!=='tm')i.focus()}}
+function closeEd(){sh.hidden=true;sh.innerHTML='';ed=null;pend=null}
+function okEd(){const d=D(cur);
+ if(pend){const v=document.getElementById('ei').value||'?';if(pend.i!=null)d.mk[pend.i].s=v;else{d.mk.push({p:pg,x:pend.x,y:pend.y,s:v,z:1});sel=d.mk.length-1}}
+ else{const[k,,,,,t,l]=ed,i=document.getElementById('ei');
+  if(t==='mat'){const n=parseFloat(i.value);if(n>0)d.m[l]=n;else delete d.m[l]}
+  else if(t==='sg'){if(sgs===1)d[k]=document.getElementById('sg').toDataURL('image/png');else if(sgs===2)d[k]=''}
+  else if(i)d[k]=i.value}
+ if(d.estado==='asignada')d.estado='en_proceso';save();closeEd();paint()}
+
+function initSig(){const c=document.getElementById('sg'),r=c.getBoundingClientRect(),p=window.devicePixelRatio||1;c.width=r.width*p;c.height=r.height*p;
+ const x=c.getContext('2d');x.scale(p,p);x.lineWidth=2.4;x.lineCap='round';x.strokeStyle='#000';const k=ed[0],d=D(cur);
+ if(d[k]){const im=new Image();im.onload=()=>x.drawImage(im,0,0,r.width,r.height);im.src=d[k]}
+ let on=false;const pt=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ c.onpointerdown=e=>{on=true;c.setPointerCapture(e.pointerId);const q=pt(e);x.beginPath();x.moveTo(q[0],q[1]);sgs=1};
+ c.onpointermove=e=>{if(!on)return;const q=pt(e);x.lineTo(q[0],q[1]);x.stroke()};
+ c.onpointerup=c.onpointercancel=()=>{on=false}}
+
+function croq(e,el,fl){if(e.target.closest('.mk')&&tool!=='Borrar')return;if(!tool){if(sel!=null){sel=null;paint()}return}const r=el.getBoundingClientRect(),d=D(cur),
+ x=fl[1]+(e.clientX-r.left)/r.width*fl[3],y=fl[2]+(e.clientY-r.top)/r.height*fl[4];
+ if(tool==='Borrar'){let b=-1,bd=18;d.mk.forEach((m,i)=>{const q=Math.hypot(m.x-x,m.y-y);if(m.p===pg&&q<bd){bd=q;b=i}});if(b>=0)d.mk.splice(b,1);sel=null}
+ else if(tool==='T'){pend={x,y};ed=['_',0,0,0,0,'t','Texto en el croquis'];sh.innerHTML='<div class="in"><div class="row"><b>Texto en el croquis</b><button class="back" data-a="x">Cancelar</button></div><input id="ei" placeholder="Ej.: NAP, Caja, Usuario"><button class="btn" data-a="ok">Listo</button></div>';sh.hidden=false;return}
+ else{d.mk.push({p:pg,x,y,s:tool,z:1});sel=d.mk.length-1}
+ save();paint()}
+
+const load=s=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=s});
+async function exportar(){shots=[];msg='';const d=D(cur);
+ for(const f of O(cur).forms){const F=C[f],im=await load(BG[cur+'|'+f]),cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;
+  const x=cv.getContext('2d'),S=cv.width/F.w;x.drawImage(im,0,0);x.fillStyle='#000';x.textBaseline='alphabetic';
+  for(const fl of F.F){const[k,fx,fy,w,h,t,l,fs]=fl;
+   if(t==='sg'){if(d[k]){const s=await load(d[k]),sc=Math.min(w*S/s.width,h*S/s.height);x.drawImage(s,fx*S+(w*S-s.width*sc)/2,fy*S+(h*S-s.height*sc)/2,s.width*sc,s.height*sc)}continue}
+   if(t==='cq'){x.fillStyle='#d4202a';x.font=`700 ${20*S}px Arial`;x.textAlign='center';x.textBaseline='middle';d.mk.filter(m=>m.p===f).forEach(m=>{x.font=`700 ${20*S*(m.z||1)}px Arial`;x.fillText(m.s,m.x*S,m.y*S)});x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle='#000';continue}
+   const v=String(val(fl,d));if(!v)continue;x.font=`500 ${fs*S}px Barlow,Arial,sans-serif`;
+   if(t==='ta'){let ln='',y=fy+fs*1.2;v.split(/\s+/).forEach(wd=>{const tt=ln?ln+' '+wd:wd;if(x.measureText(tt).width>(w-4)*S&&ln){x.fillText(ln,(fx+2)*S,y*S);y+=fs*1.3;ln=wd}else ln=tt});x.fillText(ln,(fx+2)*S,y*S)}
+   else x.fillText(v,(fx+2)*S,(fy+h/2)*S+fs*S*.35,(w-3)*S)}
+  shots.push({n:NM[f],u:cv.toDataURL('image/jpeg',.92)})}
+ paint();scrollTo(0,document.body.scrollHeight)}
+function blob(u){const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:'image/jpeg'})}
+async function compartir(){try{const P=window.Capacitor&&window.Capacitor.Plugins;if(P&&P.Share&&P.Filesystem){const u=[];for(const s of shots){const r=await P.Filesystem.writeFile({path:O(cur).id+' '+s.n+'.jpg',data:s.u.split(',')[1],directory:'CACHE'});u.push(r.uri)}await P.Share.share({files:u,title:O(cur).id});return}await navigator.share({files:shots.map(s=>new File([blob(s.u)],O(cur).id+' '+s.n+'.jpg',{type:'image/jpeg'})),title:O(cur).id})}catch(e){msg='No se pudo abrir Compartir aquí. Mantén presionada cada imagen para guardarla.';paint()}}
+
+function cerrar(){const o=O(cur),d=D(cur);msg='';
+ if(!d.hi||!d.hf)msg='Falta la hora de inicio y la hora final.';
+ else if(o.tipo==='instalacion'&&!Object.keys(d.m).length)msg='Registra al menos un material.';
+ else if(o.tipo==='instalacion'&&!d.firma)msg='Falta la firma del cliente.';
+ else if(o.tipo==='baja'&&!d.firma&&!d.motivo){ed=['_',0,0,0,0,'x','Motivo'];sh.innerHTML=`<div class="in"><b>El cliente no firmó. ¿Por qué?</b>${MOT.map(m=>`<button class="btn alt" data-a="mot" data-v="${m}">${m}</button>`).join('')}<button class="back" data-a="x">Cancelar</button></div>`;sh.hidden=false;return}
+ if(!msg){d.estado='cerrada';save();cur=null;pg=null;shots=[];setTimeout(sync,50)}
+ paint()}
+
+document.addEventListener('click',e=>{
+ const f=e.target.closest('.f');
+ if(f&&cur&&sh.hidden){const fl=C[pg].F[+f.dataset.i];return fl[5]==='cq'?croq(e,f,fl):openEd(fl)}
+ const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=cur?D(cur):null,i=document.getElementById('ei');
+ if(a==='open'){cur=b.dataset.id;pg=O(cur).forms[0];msg='';shots=[];tool='';sel=null;paint();scrollTo(0,0)}
+ else if(a==='back'){cur=null;closeEd();paint()}
+ else if(a==='tab'){pg=b.dataset.f;sel=null;paint()}
+ else if(a==='z+'){zm=Math.min(4,zm+.6);paint()}else if(a==='z-'){zm=Math.max(1,zm-.6);paint()}
+ else if(a==='tool'){tool=tool===b.dataset.s?'':b.dataset.s;sel=null;paint()}
+ else if(a==='sz+'||a==='sz-'){const m=d.mk[sel];if(m){m.z=Math.min(5,Math.max(.4,(m.z||1)*(a==='sz+'?1.25:.8)));save();paint()}}
+ else if(a==='mdel'){if(sel!=null){d.mk.splice(sel,1);sel=null;save();paint()}}
+ else if(a==='sdone'){sel=null;paint()}
+ else if(a==='medit'){const m=d.mk[sel];if(m){pend={i:sel};ed=['_',0,0,0,0,'t','Texto'];sh.innerHTML=`<div class="in"><div class="row"><b>Texto del croquis</b><button class="back" data-a="x">Cancelar</button></div><input id="ei" value="${esc(m.s)}"><button class="btn" data-a="ok">Listo</button></div>`;sh.hidden=false}}
+ else if(a==='pl'||a==='pr'){const w=document.getElementById('wr');w.scrollBy({left:(a==='pl'?-1:1)*w.clientWidth*.6,behavior:'smooth'})}
+ else if(a==='m+')i.value=(parseFloat(i.value)||0)+1;
+ else if(a==='m-')i.value=Math.max(0,(parseFloat(i.value)||0)-1);
+ else if(a==='now'){const n=new Date();i.value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')}
+ else if(a==='pick'){d[ed[0]]=b.dataset.v;save();closeEd();paint()}
+ else if(a==='mot'){d.motivo=b.dataset.v;closeEd();cerrar()}
+ else if(a==='clr'){const c=document.getElementById('sg');c.getContext('2d').clearRect(0,0,c.width,c.height);sgs=2}
+ else if(a==='ok')okEd();else if(a==='x')closeEd();
+ else if(a==='login')doLogin();else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg='';sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
+ else if(a==='img')exportar();else if(a==='share')compartir();else if(a==='close')cerrar()});
+document.addEventListener('pointerdown',e=>{const m=e.target.closest('.mk');if(!m||!cur||tool==='Borrar')return;
+ const f=m.closest('.f');drag={i:+m.dataset.mi,m,f,fl:C[pg].F[+f.dataset.i],mv:false,sx:e.clientX,sy:e.clientY};sel=drag.i;m.setPointerCapture(e.pointerId);e.preventDefault()});
+document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>5)drag.mv=true;if(!drag.mv)return;
+ const r=drag.f.getBoundingClientRect(),fl=drag.fl,k=D(cur).mk[drag.i];
+ k.x=Math.min(fl[1]+fl[3],Math.max(fl[1],fl[1]+(e.clientX-r.left)/r.width*fl[3]));k.y=Math.min(fl[2]+fl[4],Math.max(fl[2],fl[2]+(e.clientY-r.top)/r.height*fl[4]));
+ drag.m.style.left=(k.x-fl[1])/fl[3]*100+'%';drag.m.style.top=(k.y-fl[2])/fl[4]*100+'%'});
+const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
+document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
+const SB=window.supabase.createClient(window.CFG_URL,window.CFG_KEY);
+const idb=()=>new Promise((r,j)=>{const q=indexedDB.open('boletas',1);q.onupgradeneeded=()=>q.result.createObjectStore('bg');q.onsuccess=()=>r(q.result);q.onerror=j});
+const idbPut=async(k,v)=>{const d=await idb();return new Promise(r=>{const t=d.transaction('bg','readwrite');t.objectStore('bg').put(v,k);t.oncomplete=r})};
+const idbAll=async()=>{const d=await idb();return new Promise(r=>{const o={},q=d.transaction('bg').objectStore('bg').openCursor();q.onsuccess=e=>{const c=e.target.result;if(c){o[c.key]=c.value;c.continue()}else r(o)}})};
+const login=()=>`<div class="top"><h1>Boletas AXS</h1></div><div class="card" style="cursor:default"><div class="mut">Nombre</div><input id="em" type="text" autocomplete="username" autocapitalize="none" placeholder="Ej.: Ovidio"><div class="mut" style="margin-top:8px">Contraseña</div><input id="pw" type="password" autocomplete="current-password"><button class="btn" style="margin-top:12px" data-a="login">Entrar</button>${msg?`<div class="msg">${msg}</div>`:''}</div>`;
+const slug=s=>s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/)[0];
+async function doLogin(){msg='';const r=await SB.auth.signInWithPassword({email:slug(document.getElementById('em').value)+'@voicewave.app',password:document.getElementById('pw').value});if(r.error){msg='Nombre o contraseña incorrectos, o no hay internet.';paint();return}await boot()}
+async function boot(){BG=await idbAll();const s=(await SB.auth.getSession()).data.session;
+ if(s){me={id:s.user.id};tec=localStorage.getItem('nom')||s.user.email;
+  try{const r=await SB.from('tecnicos').select('nombre').eq('id',s.user.id).single();if(r.data){tec=r.data.nombre;localStorage.setItem('nom',tec)}}catch(e){}}
+ paint();sync()}
+async function importar(files){msg='Importando boletas…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let n=0;
+ try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+  for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tx=(await p.getTextContent()).items.map(t=>t.str).join(' ');
+   const form=/FORMULARIO BAJAS/i.test(tx)?'baja':/FORMULARIO PEX/i.test(tx)?'pex':/Formulario de Instalaci/i.test(tx)?'inst':'',ot=(tx.match(/\b(?!OT-)[A-Z]{2}-\d{4,6}\b/)||[])[0];
+   if(!form||!ot)continue;
+   const vp=p.getViewport({scale:1.7}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+   await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+   const u=cv.toDataURL('image/jpeg',.78);BG[ot+'|'+form]=u;await idbPut(ot+'|'+form,u);
+   let o=ORD.find(x=>x.id===ot);if(!o)ORD.push(o={id:ot,tipo:form==='baja'?'baja':'instalacion',label:'',cliente:'',forms:[]});
+   if(!o.forms.includes(form))o.forms.push(form);o.forms.sort((a,b)=>['pex','inst','baja'].indexOf(a)-['pex','inst','baja'].indexOf(b));
+   const m=tx.match(/NOMBRE CLIENTE\s+(.+?)\s+DIRECCION/)||tx.match(/NOMBRES DEL CONTACTO \(s\)\s+(.+?)\s+DIRECCION/);if(m&&!o.cliente)o.cliente=m[1].trim();
+   o.label=o.tipo==='baja'?(/MASIVA/i.test(tx)?'Baja masiva':/Desinstalaci/i.test(tx)?'Desinstalación fibra':'Baja'):'Instalación fibra';n++}}
+  localStorage.setItem('ord_v1',JSON.stringify(ORD));msg=n?'':'No se reconoció ninguna boleta AXS en esos PDF.'}
+ catch(e){msg='No se pudo leer el PDF.'}
+ paint()}
+const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
+const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
+async function sync(){if(!me||!navigator.onLine)return;
+ try{const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
+  for(const o of ORD){const d=D(o.id);if(d.estado!=='cerrada'||d.sync)continue;
+   const id=(await Q(SB.from('ordenes').upsert({ot:o.id,tipo:o.tipo==='baja'?(/^VS/.test(o.id)?'baja_xdsl':'baja_fibra'):'instalacion',cliente:o.cliente||null,tecnico_id:me.id,estado:'cerrada'},{onConflict:'ot'}).select('id').single())).data.id;
+   const dt={...d};delete dt.firma;delete dt.firmaT;
+   await Q(SB.from('cierres').upsert({orden_id:id,empresa:d.empresa,tecnico_id:me.id,tecnico_2:d.tecnico2||null,fecha_ejecucion:d.fecha||null,hora_inicio:d.hi||null,hora_fin:d.hf||null,distancia_cable_texto:d.dist||null,potencia_nap:nu(d.pNap),potencia_usuario:nu(d.pUsu),postes_utilizados:nu(d.postes),postes_equipados:nu(d.postesEq),apoyo_mensajero:nu(d.mensajero),observacion:d.obs||d.nota||d.obsF||null,nombre_cliente:d.cliente||null,motivo_sin_firma:d.motivo||null,ruta_mod_olt:d.rOlt||null,ruta_mod_odn:d.rOdn||null,ruta_mod_nap:d.rNap||null,ruta_mod_po:d.rPo||null,datos:dt}));
+   await Q(SB.from('materiales_usados').delete().eq('orden_id',id));
+   const mu=Object.keys(d.m).filter(k=>ids[k]).map(k=>({orden_id:id,material_id:ids[k],cantidad:d.m[k]}));if(mu.length)await Q(SB.from('materiales_usados').insert(mu));
+   await Q(SB.from('equipos').delete().eq('orden_id',id));const eq=[];
+   if(o.tipo==='baja'){if(d.onu)eq.push({orden_id:id,sentido:'instalado',tipo:'ONU',serie:d.onu});if(d.stb)eq.push({orden_id:id,sentido:'instalado',tipo:'STB',serie:d.stb});
+    for(let i=0;i<5;i++)if(d['mod'+i]||d['rec'+i])eq.push({orden_id:id,sentido:'recuperado',modelo:d['mod'+i]||null,serie:d['rec'+i]||null});
+    await Q(SB.from('bajas_detalle').upsert({orden_id:id,cable_recuperado:nu(d.cabR),tensores_recuperados:nu(d.tens),conectores_recuperados:nu(d.conec),postes_liberados:nu(d.postesL)}))}
+   else if(d.mo||d.se||d.af)eq.push({orden_id:id,sentido:'instalado',tipo:d.mo||null,modelo:d.mo||null,serie:d.se||null,activo_fijo:d.af||null});
+   if(eq.length)await Q(SB.from('equipos').insert(eq));
+   d.sync=true;save()}
+  if(!cur)msg=''}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}
+ if(!cur)paint()}
+document.addEventListener('change',e=>{if(e.target.id==='fi')importar(e.target.files)});
+window.addEventListener('online',sync);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
+boot();
+</script>
+</body>
+</html>
