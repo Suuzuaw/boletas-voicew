@@ -50,6 +50,8 @@ canvas.sig{width:100%;height:190px;border:1.5px dashed var(--mut);border-radius:
 .msg{padding:10px;border-radius:8px;background:var(--rs);color:var(--red);margin:10px 0;font-weight:500}
 img.out{width:100%;border:1px solid var(--line);border-radius:8px;margin-top:8px}
 #md{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}#md[hidden]{display:none}#md .box{background:var(--card);border-radius:12px;padding:16px;max-width:420px;width:100%;max-height:80vh;overflow:auto}#md ul{padding-left:18px;margin:8px 0 14px}
+.lk{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--red);color:#fff;font-weight:600;text-decoration:none;white-space:nowrap}.lk.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}.lk.dis{background:var(--line);color:var(--mut)}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.g4 div{background:var(--bg);border-radius:8px;padding:6px 2px}.g4 small{display:block;color:var(--mut);font-size:11px}.g4 b{font-size:17px}
 </style>
 </head>
 <body>
@@ -91,9 +93,9 @@ function pageHTML(){const F=C[pg],d=D(cur);let h=`<div class="page" style="width
   h+=`<div class="f ${t}${e}${on}" data-i="${i}" style="left:${x/F.w*100}%;top:${y/F.h*100}%;width:${w/F.w*100}%;height:${hh/F.h*100}%;--fs:${(fs||14)/F.w*100}">${inn}</div>`});
  return h+'</div>'}
 
-function detalle(){const o=O(cur),d=D(cur),fs=o.forms;
+function detalle(){const o=O(cur),d=D(cur),fs=o.forms;if(pg==='ficha')return fichaHTML(o,d,fs);
  let h=`<div class="top"><div class="row"><button class="back" data-a="back">‹ Boletas</button><b>${o.id}</b>${chip(d.estado)}</div><div class="tb">`;
- if(fs.length>1)fs.forEach(f=>h+=`<button class="${f===pg?'on':''}" data-a="tab" data-f="${f}">${NM[f]}</button>`);
+ ['ficha',...fs].forEach(f=>h+=`<button class="${f===pg?'on':''}" data-a="tab" data-f="${f}">${f==='ficha'?'Ficha':NM[f]}</button>`);
  h+=`<button data-a="z-">−</button><button data-a="z+">+</button><button data-a="pl">◀</button><button data-a="pr">▶</button><span class="mut" style="align-self:center">Toca una casilla roja para llenarla</span></div><div class="tb"><span class="mut" style="align-self:center">Croquis:</span>`;
  [['●','Poste'],['✕','NAP'],['✓','Caja'],['T','Texto'],['Borrar','Borrar']].forEach(([s,l])=>h+=`<button class="tl ${tool===s?'on':''}" data-a="tool" data-s="${s}">${s==='Borrar'?'Borrar':s+' '+l}</button>`);
  const sm=sel!=null&&d.mk[sel]&&d.mk[sel].p===pg?d.mk[sel]:null;
@@ -168,7 +170,7 @@ document.addEventListener('click',e=>{
   if(!sh.hidden){if(ed&&!pend&&!['x','sel'].includes(ed[5]))okEd();else closeEd();el=document.querySelector('.f[data-i="'+i0+'"]')||f}
   return fl[5]==='cq'?croq(e,el,fl):openEd(fl)}
  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=cur?D(cur):null,i=document.getElementById('ei');
- if(a==='open'){cur=b.dataset.id;pg=O(cur).forms[0];msg='';shots=[];tool='';sel=null;paint();scrollTo(0,0)}
+ if(a==='open'){cur=b.dataset.id;pg='ficha';msg='';shots=[];tool='';sel=null;paint();scrollTo(0,0)}
  else if(a==='back'){cur=null;closeEd();paint()}
  else if(a==='tab'){pg=b.dataset.f;sel=null;paint()}
  else if(a==='z+'){zm=Math.min(4,zm+.6);paint()}else if(a==='z-'){zm=Math.max(1,zm-.6);paint()}
@@ -196,7 +198,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.4",CHANGES=["Las boletas se agrupan por día de asignación y muestran la hora y el minuto en que se asignaron.", "Ahora se muestra la fecha y hora de la última sincronización.", "La app avisa cuando hay una versión nueva y se actualiza sin tener que bajarla otra vez.", "Se puede cambiar de casilla sin cerrar el panel de edición."];
+const APP_VER="1.5",CHANGES=["Nueva pestaña Ficha con el cliente, la dirección, el teléfono con botón de WhatsApp, la ruta asignada y el croquis.", "Enlaces para ir a la ODN y al NAP cuando su ubicación esté cargada.", "Las boletas se agrupan por día de asignación con la hora y el minuto.", "Se muestra la fecha y hora de la última sincronización."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -220,16 +222,53 @@ async function boot(){BG=await idbAll();const s=(await SB.auth.getSession()).dat
    if(!r.data){await SB.auth.signOut();me=null;msg='Usuario no autorizado.'}else{tec=r.data.nombre;me.rol=r.data.rol;localStorage.setItem('nom',tec);localStorage.setItem('rol',me.rol)}}catch(e){}}
  if(me&&me.rol==='supervisor')await cargarAdmin();
  paint();sync();aviso()}
+function extraer(items,H,form){
+ const it=items.filter(t=>t.str.trim()).map(t=>({s:t.str.trim(),x:t.transform[4],y:H-t.transform[5],w:t.width||0}));
+ const L=re=>it.find(t=>re.test(t.s));
+ const fila=(re,max)=>{const l=L(re);if(!l)return '';return it.filter(t=>t!==l&&Math.abs(t.y-l.y)<6&&t.x>l.x+l.w-2&&(max==null||t.x<max)).sort((a,b)=>a.x-b.x).map(t=>t.s).join(' ').trim()};
+ const f={};
+ f.cliente=(fila(/^NOMBRE CLIENTE$/)||fila(/^NOMBRE$/)||fila(/^NOMBRES DEL CONTACTO/)).replace(/\s*TELEFONO$/,'');
+ f.direccion=fila(/^DIRECCION:?$/);
+ const dig=v=>String(v||'').replace(/\D/g,'');
+ let tel=dig(fila(/^TELEFONO:?$/));if(!/[1-9]/.test(tel)||tel.length<7)tel=dig(fila(/^CELULAR$/));
+ f.telefono=/[1-9]/.test(tel)?tel:'';
+ const tl=L(/^TELEFONO:?$/);f.plan=form==='pex'?fila(/^VELOCIDAD$/,tl?tl.x-2:null):'';
+ const r0=L(/^RUTA ASIGNADA/);
+ if(r0){const row=it.filter(t=>t.y>r0.y+16&&t.y<r0.y+40&&t.x<300).sort((p,q)=>p.x-q.x).map(t=>t.s);
+  [f.olt,f.odn,f.nap,f.po,f.dist]=[row[0]||'',row[1]||'',row[2]||'',row[3]||'',row[4]||'']}
+ return f}
+
+const fic=(u,cp)=>{const f=u.f||{},o={cliente:u.cliente||f.cliente||undefined,direccion:f.direccion||undefined,telefono:f.telefono||undefined,olt:f.olt||undefined,odn:f.odn||undefined,nap:f.nap||undefined,po:f.po||undefined,plan_velocidad:f.plan||undefined,croquis_path:cp||undefined},d=parseInt(f.dist)||undefined;
+ if(u.tipoDb==='instalacion')o.distancia_factibilidad=d;else o.cable_instalado_asignado=d;return o};
+async function nodos(odns){let N={};try{N=JSON.parse(localStorage.getItem('nodos_v1')||'{}')}catch(e){}
+ for(const od of odns){const r=await SB.from('red_nodos').select('tipo,odn,nap,lat,lon').ilike('odn',od);if(!r.error)N[od.toLowerCase()]=r.data}
+ try{localStorage.setItem('nodos_v1',JSON.stringify(N))}catch(e){}}
+function nodo(odn,nap){let N={};try{N=JSON.parse(localStorage.getItem('nodos_v1')||'{}')}catch(e){}
+ const r=N[String(odn||'').toLowerCase()]||[];return {odn:r.find(x=>x.tipo==='ODN'),nap:r.find(x=>x.tipo==='NAP'&&String(x.nap||'').toLowerCase()===String(nap||'').toLowerCase())}}
+const telN=v=>{let n=String(v||'').replace(/\D/g,'');if(n.startsWith('591'))n=n.slice(3);return n.replace(/^0+/,'')};
+const gmap=n=>`https://www.google.com/maps/dir/?api=1&destination=${n.lat},${n.lon}&travelmode=driving`;
+function fichaHTML(o,d,fs){const f=o.f||{},tn=telN(f.tel),wa=/^[67]\d{7}$/.test(tn),nd=nodo(f.odn,f.nap);
+ let h=`<div class="top"><div class="row"><button class="back" data-a="back">‹ Boletas</button><b>${o.id}</b>${chip(d.estado)}</div><div class="tb">`+['ficha',...fs].map(x=>`<button class="${x===pg?'on':''}" data-a="tab" data-f="${x}">${x==='ficha'?'Ficha':NM[x]}</button>`).join('')+`</div></div>`;
+ h+=`<div class="card" style="cursor:default"><div class="mut">Cliente</div><div style="font-size:19px;font-weight:600">${esc(o.cliente||'—')}</div><div class="mut" style="margin-top:8px">Dirección</div><div>${esc(f.dir||'—')}</div><div class="mut" style="margin-top:8px">Teléfono</div>`;
+ h+=tn?`<div class="row"><b>${esc(tn)}</b><span style="display:flex;gap:8px">${wa?`<a class="lk" target="_blank" rel="noopener" href="https://wa.me/591${tn}?text=${encodeURIComponent('Hola, soy técnico de Voicewave (AXS). Me comunico por su orden '+o.id+'.')}">WhatsApp</a>`:''}<a class="lk alt" href="tel:+591${tn}">Llamar</a></span></div>`:'<div>Sin teléfono en la boleta</div>';
+ h+=`</div><div class="card" style="cursor:default"><div class="mut">Ruta asignada</div><div class="g4" style="margin-top:6px">${[['OLT',f.olt],['ODN',f.odn],['NAP',f.nap],['PO',f.po]].map(([l,v])=>`<div><small>${l}</small><b>${esc(v||'—')}</b></div>`).join('')}</div>`;
+ h+=o.tipo==='baja'?(f.cable?`<div style="margin-top:8px">Cable instalado: <b>${f.cable} m</b></div>`:''):(f.dist?`<div style="margin-top:8px">Distancia de factibilidad: <b>${f.dist} m</b></div>`:'');
+ if(f.plan)h+=`<div class="mut" style="margin-top:4px">${esc(f.plan)}</div>`;
+ h+=`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">${nd.odn?`<a class="lk" target="_blank" rel="noopener" href="${gmap(nd.odn)}">Ir a la ODN</a>`:'<span class="lk dis">ODN sin ubicación</span>'}${nd.nap?`<a class="lk" target="_blank" rel="noopener" href="${gmap(nd.nap)}">Ir al NAP</a>`:'<span class="lk dis">NAP sin ubicación</span>'}</div></div>`;
+ if(BG[o.id+'|croquis'])h+=`<div class="card" style="cursor:default"><div class="mut">Croquis</div><img class="out" src="${BG[o.id+'|croquis']}" alt="Croquis"></div>`;
+ return h+'<div class="bar"><div class="in"><button class="btn alt" data-a="img">Generar imagen</button><button class="btn" data-a="close">Cerrar boleta</button></div></div>'}
 let UP=[],TEC=[],ADM=[];
 async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let n=0;
  try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
-  for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tx=(await p.getTextContent()).items.map(t=>t.str).join(' ');
+  for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tc=await p.getTextContent(),tx=tc.items.map(t=>t.str).join(' ');
    const form=/FORMULARIO BAJAS/i.test(tx)?'baja':/FORMULARIO PEX/i.test(tx)?'pex':/Formulario de Instalaci/i.test(tx)?'inst':'',ot=(tx.match(/\b(?!OT-)[A-Z]{2}-\d{4,6}\b/)||[])[0];
    if(!form||!ot)continue;
    const vp=p.getViewport({scale:1.7}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
    await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
    let u=UP.find(x=>x.ot===ot);if(!u)UP.push(u={ot,forms:{},cliente:'',label:'',tipoDb:'instalacion',tec:''});
    u.forms[form]=cv.toDataURL('image/jpeg',.78);
+   const fx=extraer(tc.items,p.getViewport({scale:1}).height,form);u.f=u.f||{};for(const k in fx)if(fx[k]&&!u.f[k])u.f[k]=fx[k];if(fx.cliente&&!u.cliente)u.cliente=fx.cliente;
+   if(form==='pex'){const c2=document.createElement('canvas'),k=1.7;c2.width=395*k;c2.height=262*k;c2.getContext('2d').drawImage(cv,158*k,253*k,395*k,262*k,0,0,395*k,262*k);u.croquis=c2.toDataURL('image/jpeg',.82)}
    const m=tx.match(/NOMBRE CLIENTE\s+(.+?)\s+DIRECCION/)||tx.match(/NOMBRES DEL CONTACTO \(s\)\s+(.+?)\s+DIRECCION/);if(m&&!u.cliente)u.cliente=m[1].trim();
    if(form==='baja'){u.tipoDb=/MASIVA/i.test(tx)?'baja_masiva':/^VS/.test(ot)?'baja_xdsl':'baja_fibra';u.label=/MASIVA/i.test(tx)?'Baja masiva':'Desinstalación fibra'}else u.label='Instalación fibra';n++}}
   msg=n?'':'No se reconoció ninguna boleta AXS en esos PDF.'}catch(e){msg='No se pudo leer el PDF.'}
@@ -240,7 +279,8 @@ async function subir(){msg='Subiendo…';paint();let n=0;
  try{for(const u of UP){if(!u.tec)continue;const fondos={};
   const ex=(await Q(SB.from('ordenes').select('fondos').eq('ot',u.ot).maybeSingle())).data;
   for(const f in u.forms){const path=u.ot+'/'+f+'.jpg';await Q(SB.storage.from('boletas').upload(path,blob(u.forms[f]),{upsert:true,contentType:'image/jpeg'}));fondos[f]=path}
-  await Q(SB.from('ordenes').upsert({ot:u.ot,tipo:u.tipoDb,cliente:u.cliente||null,etiqueta:u.label,tecnico_id:u.tec,fondos:{...((ex&&ex.fondos)||{}),...fondos},estado:'asignada',asignada_en:new Date().toISOString(),fecha_asignacion:new Date().toISOString().slice(0,10)},{onConflict:'ot'}));n++}
+  let cp;if(u.croquis){cp=u.ot+'/croquis.jpg';await Q(SB.storage.from('boletas').upload(cp,blob(u.croquis),{upsert:true,contentType:'image/jpeg'}))}
+  await Q(SB.from('ordenes').upsert({ot:u.ot,tipo:u.tipoDb,...fic(u,cp),etiqueta:u.label,tecnico_id:u.tec,fondos:{...((ex&&ex.fondos)||{}),...fondos},estado:'asignada',asignada_en:new Date().toISOString(),fecha_asignacion:new Date().toISOString().slice(0,10)},{onConflict:'ot'}));n++}
   UP=UP.filter(u=>!u.tec);msg=n?'':'Elige un técnico para cada boleta.';await cargarAdmin()}catch(e){msg='Error al subir: '+(e.message||e)}
  paint()}
 const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Cargar PDF</button><button data-a="adm">Actualizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden><p class="mut">Última actualización: <b>${lastSync()}</b></p>`;
@@ -249,12 +289,14 @@ const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="
  h+='<h3>Boletas cargadas</h3>';if(!ADM.length)h+='<p class="mut">Todavía no hay boletas.</p>';
  let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div></div>`});
  return h};
-async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en').neq('estado','cerrada'))).data||[],ord=['pex','inst','baja'];
+async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en,telefono,direccion,olt,odn,nap,po,plan_velocidad,distancia_factibilidad,cable_instalado_asignado,croquis_path').neq('estado','cerrada'))).data||[],ord=['pex','inst','baja'];
  for(const r of rows){let o=ORD.find(x=>x.id===r.ot);const forms=Object.keys(r.fondos||{}).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
   for(const f of forms){if(BG[r.ot+'|'+f]&&o&&o.dbid)continue;const b=(await Q(SB.storage.from('boletas').download(r.fondos[f]))).data;
    const u=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|'+f]=u;await idbPut(r.ot+'|'+f,u)}
+  if(r.croquis_path&&!BG[r.ot+'|croquis']){const b=(await Q(SB.storage.from('boletas').download(r.croquis_path))).data;const c=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|croquis']=c;await idbPut(r.ot+'|croquis',c)}
   if(!o)ORD.push(o={id:r.ot,tipo:r.tipo.startsWith('baja')?'baja':'instalacion',label:'',cliente:'',forms:[]});
-  o.forms=forms;o.dbid=r.id;o.asig=r.asignada_en;o.label=r.etiqueta||o.label;o.cliente=r.cliente||o.cliente}
+  o.forms=forms;o.dbid=r.id;o.asig=r.asignada_en;o.f={dir:r.direccion,tel:r.telefono,olt:r.olt,odn:r.odn,nap:r.nap,po:r.po,plan:r.plan_velocidad,dist:r.distancia_factibilidad,cable:r.cable_instalado_asignado};o.label=r.etiqueta||o.label;o.cliente=r.cliente||o.cliente}
+ try{await nodos([...new Set(rows.map(r=>r.odn).filter(Boolean))])}catch(e){}
  localStorage.setItem('ord_v1',JSON.stringify(ORD))}
 const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
 const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
