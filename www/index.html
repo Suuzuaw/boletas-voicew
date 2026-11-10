@@ -49,11 +49,13 @@ select,input,textarea{font:inherit;color:var(--ink);background:var(--card);borde
 canvas.sig{width:100%;height:190px;border:1.5px dashed var(--mut);border-radius:8px;background:#fff;touch-action:none;display:block}
 .msg{padding:10px;border-radius:8px;background:var(--rs);color:var(--red);margin:10px 0;font-weight:500}
 img.out{width:100%;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+#md{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}#md[hidden]{display:none}#md .box{background:var(--card);border-radius:12px;padding:16px;max-width:420px;width:100%;max-height:80vh;overflow:auto}#md ul{padding-left:18px;margin:8px 0 14px}
 </style>
 </head>
 <body>
 <main id="app"></main>
 <div id="sh" hidden></div>
+<div id="md" hidden></div>
 <script src="supabase.js"></script><script src="pdf.min.js"></script><script src="config.js"></script>
 <script>
 const C={"pex": {"w": 595.32, "h": 841.92, "F": [["como", 96, 63, 34, 14, "sel", "¿Firmó comodato?", 9], ["m", 109, 251.5, 33, 10, "mat", "Equipo", 8], ["m", 109, 261.5, 33, 10, "mat", "Cable", 8], ["m", 109, 271.5, 33, 10, "mat", "Cable UTP", 8], ["m", 109, 281.5, 33, 10, "mat", "Cable interno", 8], ["m", 109, 292.5, 33, 10, "mat", "Roseta", 8], ["m", 109, 302.5, 33, 10, "mat", "Tensores", 8], ["m", 109, 312.5, 33, 10, "mat", "Conector mecánico", 8], ["m", 109, 322.5, 33, 10, "mat", "Acoplador", 8], ["m", 109, 332.5, 33, 10, "mat", "Patch cord", 8], ["m", 109, 343.5, 33, 10, "mat", "Precintos 10 cm", 8], ["m", 109, 353.5, 33, 10, "mat", "Precintos 20 cm", 8], ["m", 109, 363.5, 33, 10, "mat", "Grampas", 8], ["m", 109, 374.5, 33, 10, "mat", "Anilla guía", 8], ["m", 109, 384.5, 33, 10, "mat", "Abrazadera BAP", 8], ["m", 109, 394.5, 33, 10, "mat", "Cable acero", 8], ["m", 109, 404.5, 33, 10, "mat", "Aislador", 8], ["m", 109, 414.5, 33, 10, "mat", "Rack", 8], ["m", 109, 425.5, 33, 10, "mat", "Morceto", 8], ["m", 109, 435.5, 33, 10, "mat", "Malla preformada", 8], ["m", 109, 445.5, 33, 10, "mat", "Malla lazo", 8], ["m", 109, 455.5, 33, 10, "mat", "Cable canal", 8], ["m", 109, 465.5, 33, 10, "mat", "Conector UY", 8], ["m", 109, 476.5, 33, 10, "mat", "Conectores RJ45", 8], ["m", 109, 486.5, 33, 10, "mat", "Capuchones", 8], ["m", 109, 496.5, 33, 10, "mat", "Cinta aislante", 8], ["rOlt", 255, 187, 65, 17, "t", "Ruta modificada: OLT", 10], ["rOdn", 322, 187, 36, 17, "t", "Ruta modificada: ODN", 10], ["rNap", 359, 187, 33, 17, "t", "Ruta modificada: NAP", 10], ["rPo", 393, 187, 33, 17, "t", "Ruta modificada: PO", 10], ["cq", 158, 253, 395, 262, "cq", "Croquis", 20], ["mo", 39, 539, 32, 19, "t", "Modelo del equipo", 8], ["se", 73, 539, 173, 19, "t", "Serie", 9], ["af", 249, 539, 140, 19, "t", "Activo fijo", 9], ["pNap", 392, 549, 64, 26, "n", "Potencia NAP (dBm)", 10], ["pUsu", 392, 590, 64, 26, "n", "Potencia usuario (dBm)", 10], ["postes", 527, 539, 34, 20, "n", "Postes utilizados", 10], ["postesEq", 527, 560, 34, 19, "n", "Postes equipados", 10], ["mensajero", 527, 580, 34, 20, "n", "Apoyo en mensajero", 10], ["ductos", 527, 601, 34, 20, "t", "¿Ductos o cámaras?", 9], ["obs", 38, 632, 523, 56, "ta", "Observación de instalación", 9], ["empresa", 108, 701, 134, 19, "t", "Empresa", 10], ["tecnico", 108, 722, 134, 19, "t", "Técnico", 10], ["tecnico2", 108, 742, 134, 19, "t", "Segundo técnico (opcional)", 10], ["fecha", 292, 701, 94, 19, "dt", "Fecha", 10], ["hi", 300, 722, 86, 19, "tm", "Hora de inicio", 10], ["hf", 294, 742, 92, 19, "tm", "Hora final", 10], ["firma", 389, 701, 171, 27, "sg", "Firma del cliente", 0], ["cliente", 389, 731, 171, 26, "t", "Nombre del cliente", 12], ["dist", 284, 763, 277, 17, "t", "Distancia del cable (inicio − final)", 10]]}, "baja": {"w": 595.32, "h": 841.92, "F": [["cabR", 365, 210, 58, 19, "n", "Cable recuperado (m)", 11], ["tens", 426, 210, 57, 19, "n", "Tensor recuperado", 11], ["conec", 486, 210, 47, 19, "n", "Conector recuperado", 11], ["postesL", 536, 210, 44, 19, "n", "Postes liberados", 11], ["onu", 100, 242.3, 196, 19, "t", "ONU instalada", 9], ["stb", 100, 261.3, 196, 19, "t", "STB instalado", 9], ["mod0", 302, 242.3, 56, 19, "t", "Modelo", 8], ["rec0", 361, 242.3, 210, 19, "t", "Equipo recuperado", 9], ["mod1", 302, 261.3, 56, 19, "t", "Modelo", 8], ["rec1", 361, 261.3, 210, 19, "t", "Equipo recuperado", 9], ["mod2", 302, 280.3, 56, 19, "t", "Modelo", 8], ["rec2", 361, 280.3, 210, 19, "t", "Equipo recuperado", 9], ["mod3", 302, 299.3, 56, 19, "t", "Modelo", 8], ["rec3", 361, 299.3, 210, 19, "t", "Equipo recuperado", 9], ["mod4", 302, 318.3, 56, 19, "t", "Modelo", 8], ["rec4", 361, 318.3, 210, 19, "t", "Equipo recuperado", 9], ["nota", 57, 340, 512, 44, "ta", "Nota de la baja", 11], ["cq", 55, 386, 516, 182, "cq", "Croquis", 20], ["obs", 54, 581, 518, 58, "ta", "Observación de instalación", 10], ["empresa", 105, 657, 140, 21, "t", "Empresa", 10], ["tecnico", 105, 680, 140, 21, "t", "Técnico", 10], ["tecnico2", 105, 702, 140, 21, "t", "Segundo técnico (opcional)", 10], ["fecha", 292, 657, 94, 21, "dt", "Fecha", 10], ["hi", 300, 680, 86, 21, "tm", "Hora de inicio", 10], ["hf", 294, 702, 92, 21, "tm", "Hora final", 10], ["firma", 388, 657, 183, 30, "sg", "Firma del cliente", 0], ["cliente", 388, 692, 183, 30, "t", "Nombre del cliente", 12]]}, "inst": {"w": 612, "h": 792, "F": [["mo", 87, 486, 75, 14, "t", "Equipo (modelo)", 8], ["se", 163, 486, 200, 14, "t", "Serie", 9], ["af", 365, 486, 112, 14, "t", "Activo fijo", 9], ["obsF", 69, 606, 440, 26, "ta", "Observaciones", 9], ["maq", 461, 592, 60, 13, "t", "N° Maq.", 8], ["fecha", 226, 661, 35, 17, "dd", "Fecha", 10], ["fecha", 263, 661, 35, 17, "mo", "Fecha", 10], ["hf", 346, 661, 24, 17, "hh", "Hora final", 10], ["hf", 376, 661, 26, 17, "mi", "Hora final", 10], ["firmaT", 76, 678, 150, 28, "sg", "Firma del técnico (AXS)", 0], ["tecnico", 122, 722, 140, 14, "t", "Nombre del técnico", 9], ["firma", 382, 676, 150, 28, "sg", "Firma del usuario", 0], ["cliente", 426, 719, 130, 14, "t", "Nombre del usuario", 9]]}};
@@ -76,8 +78,8 @@ function val(f,d){const k=f[0],t=f[5];if(t==='mat')return d.m[f[6]]||'';const v=
  if(t==='hh')return v.split(':')[0];if(t==='mi')return v.split(':')[1];return v}
 
 function lista(){let h=`<div class="top row"><h1>Mis boletas</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="sync">Sincronizar</button><button data-a="out">Salir</button></div>
-<p class="mut">Cada boleta se abre sobre el formato original de AXS. Se guarda en este teléfono aunque no haya señal.</p>`;
- ORD.forEach(o=>{h+=`<button class="card" data-a="open" data-id="${o.id}"><div class="row"><b style="font-size:18px">${o.id}</b>${chip(D(o.id).estado)}</div><div>${o.cliente}</div><div class="mut">${o.label}</div></button>`});
+<p class="mut">Última sincronización: <b>${lastSync()}</b></p>`;
+ let lk='';[...ORD].sort((a,b)=>(b.asig||'').localeCompare(a.asig||'')).forEach(o=>{const k=o.asig?dkey(o.asig):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asig):'Sin fecha'}</h3>`}h+=`<button class="card" data-a="open" data-id="${o.id}"><div class="row"><b style="font-size:18px">${o.id}</b>${chip(D(o.id).estado)}</div><div>${esc(o.cliente)}</div><div class="mut">${o.label}${o.asig?' · asignada a las '+fmtHora(o.asig):''}</div></button>`});
  return h+(ORD.length?'':'<p class="mut">Aún no tienes boletas asignadas. Toca “Sincronizar” con internet para recibirlas.</p>')+(msg?`<div class="msg">${msg}</div>`:'')}
 
 function pageHTML(){const F=C[pg],d=D(cur);let h=`<div class="page" style="width:${zm*100}%;aspect-ratio:${F.w}/${F.h};background-image:url(${BG[cur+'|'+pg]||''})">`;
@@ -183,7 +185,7 @@ document.addEventListener('click',e=>{
  else if(a==='mot'){d.motivo=b.dataset.v;closeEd();cerrar()}
  else if(a==='clr'){const c=document.getElementById('sg');c.getContext('2d').clearRect(0,0,c.width,c.height);sgs=2}
  else if(a==='ok')okEd();else if(a==='x')closeEd();
- else if(a==='login')doLogin();else if(a==='adm'){cargarAdmin().then(paint)}else if(a==='subir')subir();else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg='';sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
+ else if(a==='login')doLogin();else if(a==='adm'){cargarAdmin().then(paint)}else if(a==='subir')subir();else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
  else if(a==='img')exportar();else if(a==='share')compartir();else if(a==='close')cerrar()});
 document.addEventListener('pointerdown',e=>{const m=e.target.closest('.mk');if(!m||!cur||tool==='Borrar')return;
  const f=m.closest('.f');drag={i:+m.dataset.mi,m,f,fl:C[pg].F[+f.dataset.i],mv:false,sx:e.clientX,sy:e.clientY};sel=drag.i;m.setPointerCapture(e.pointerId);e.preventDefault()});
@@ -194,6 +196,17 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
+const APP_VER="1.4",CHANGES=["Las boletas se agrupan por día de asignación y muestran la hora y el minuto en que se asignaron.", "Ahora se muestra la fecha y hora de la última sincronización.", "La app avisa cuando hay una versión nueva y se actualiza sin tener que bajarla otra vez.", "Se puede cambiar de casilla sin cerrar el panel de edición."];
+const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
+const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
+const dkey=i=>{const d=new Date(i);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const lastSync=()=>{try{const v=localStorage.getItem('last_sync');return v?fmtFH(v):'nunca'}catch(e){return 'nunca'}};
+function modal(t,items,btns){const m=document.getElementById('md');m.innerHTML=`<div class="box"><h2 style="margin-top:0">${t}</h2><ul>${items.map(i=>`<li>${i}</li>`).join('')}</ul><div class="g2">${btns}</div></div>`;m.hidden=false}
+async function aviso(){let seen='';try{seen=localStorage.getItem('ver_seen')||''}catch(e){}
+ if(seen!==APP_VER){modal('App actualizada (versión '+APP_VER+')',CHANGES,'<button class="btn" data-a="mdok" style="grid-column:1/3">Entendido</button>');return}
+ try{if(!navigator.onLine)return;const r=await fetch('version.json?'+Date.now(),{cache:'no-store'}),v=await r.json();
+  if(v.ver&&v.ver!==APP_VER)modal('Hay una versión nueva ('+v.ver+')',v.cambios||[],'<button class="btn alt" data-a="mdx">Más tarde</button><button class="btn" data-a="upd">Actualizar ahora</button>')}catch(e){}}
 const SB=window.supabase.createClient(window.CFG_URL,window.CFG_KEY);
 const idb=()=>new Promise((r,j)=>{const q=indexedDB.open('boletas',1);q.onupgradeneeded=()=>q.result.createObjectStore('bg');q.onsuccess=()=>r(q.result);q.onerror=j});
 const idbPut=async(k,v)=>{const d=await idb();return new Promise(r=>{const t=d.transaction('bg','readwrite');t.objectStore('bg').put(v,k);t.oncomplete=r})};
@@ -206,7 +219,7 @@ async function boot(){BG=await idbAll();const s=(await SB.auth.getSession()).dat
   try{const r=await SB.from('tecnicos').select('nombre,rol').eq('id',s.user.id).maybeSingle();if(r.error)throw r.error;
    if(!r.data){await SB.auth.signOut();me=null;msg='Usuario no autorizado.'}else{tec=r.data.nombre;me.rol=r.data.rol;localStorage.setItem('nom',tec);localStorage.setItem('rol',me.rol)}}catch(e){}}
  if(me&&me.rol==='supervisor')await cargarAdmin();
- paint();sync()}
+ paint();sync();aviso()}
 let UP=[],TEC=[],ADM=[];
 async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let n=0;
  try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
@@ -222,26 +235,26 @@ async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOpt
   msg=n?'':'No se reconoció ninguna boleta AXS en esos PDF.'}catch(e){msg='No se pudo leer el PDF.'}
  paint()}
 async function cargarAdmin(){try{TEC=(await Q(SB.from('tecnicos').select('id,nombre').eq('rol','tecnico').eq('activo',true).order('nombre'))).data||[];
- ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id').order('created_at',{ascending:false}).limit(60))).data||[]}catch(e){msg='No se pudo actualizar la lista.'}}
+ ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en').order('asignada_en',{ascending:false}).limit(60))).data||[];try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
 async function subir(){msg='Subiendo…';paint();let n=0;
  try{for(const u of UP){if(!u.tec)continue;const fondos={};
   const ex=(await Q(SB.from('ordenes').select('fondos').eq('ot',u.ot).maybeSingle())).data;
   for(const f in u.forms){const path=u.ot+'/'+f+'.jpg';await Q(SB.storage.from('boletas').upload(path,blob(u.forms[f]),{upsert:true,contentType:'image/jpeg'}));fondos[f]=path}
-  await Q(SB.from('ordenes').upsert({ot:u.ot,tipo:u.tipoDb,cliente:u.cliente||null,etiqueta:u.label,tecnico_id:u.tec,fondos:{...((ex&&ex.fondos)||{}),...fondos},estado:'asignada',fecha_asignacion:new Date().toISOString().slice(0,10)},{onConflict:'ot'}));n++}
+  await Q(SB.from('ordenes').upsert({ot:u.ot,tipo:u.tipoDb,cliente:u.cliente||null,etiqueta:u.label,tecnico_id:u.tec,fondos:{...((ex&&ex.fondos)||{}),...fondos},estado:'asignada',asignada_en:new Date().toISOString(),fecha_asignacion:new Date().toISOString().slice(0,10)},{onConflict:'ot'}));n++}
   UP=UP.filter(u=>!u.tec);msg=n?'':'Elige un técnico para cada boleta.';await cargarAdmin()}catch(e){msg='Error al subir: '+(e.message||e)}
  paint()}
-const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Cargar PDF</button><button data-a="adm">Actualizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden>`;
+const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Cargar PDF</button><button data-a="adm">Actualizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden><p class="mut">Última actualización: <b>${lastSync()}</b></p>`;
  if(msg)h+=`<div class="msg">${msg}</div>`;
  if(UP.length){h+='<h3>Por asignar</h3>';UP.forEach((u,i)=>h+=`<div class="card" style="cursor:default"><div class="row"><b>${u.ot}</b><span class="mut">${u.label} · ${Object.keys(u.forms).join(', ')}</span></div><div>${esc(u.cliente)}</div><select data-up="${i}"><option value="">Elegir técnico…</option>${TEC.map(t=>`<option value="${t.id}"${u.tec===t.id?' selected':''}>${esc(t.nombre)}</option>`).join('')}</select></div>`);h+='<button class="btn" data-a="subir">Subir y asignar</button>'}
  h+='<h3>Boletas cargadas</h3>';if(!ADM.length)h+='<p class="mut">Todavía no hay boletas.</p>';
- ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id);h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}</div></div>`});
+ let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div></div>`});
  return h};
-async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos').neq('estado','cerrada'))).data||[],ord=['pex','inst','baja'];
+async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en').neq('estado','cerrada'))).data||[],ord=['pex','inst','baja'];
  for(const r of rows){let o=ORD.find(x=>x.id===r.ot);const forms=Object.keys(r.fondos||{}).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
   for(const f of forms){if(BG[r.ot+'|'+f]&&o&&o.dbid)continue;const b=(await Q(SB.storage.from('boletas').download(r.fondos[f]))).data;
    const u=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|'+f]=u;await idbPut(r.ot+'|'+f,u)}
   if(!o)ORD.push(o={id:r.ot,tipo:r.tipo.startsWith('baja')?'baja':'instalacion',label:'',cliente:'',forms:[]});
-  o.forms=forms;o.dbid=r.id;o.label=r.etiqueta||o.label;o.cliente=r.cliente||o.cliente}
+  o.forms=forms;o.dbid=r.id;o.asig=r.asignada_en;o.label=r.etiqueta||o.label;o.cliente=r.cliente||o.cliente}
  localStorage.setItem('ord_v1',JSON.stringify(ORD))}
 const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
 const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
@@ -260,7 +273,7 @@ async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;
    else if(d.mo||d.se||d.af)eq.push({orden_id:id,sentido:'instalado',tipo:d.mo||null,modelo:d.mo||null,serie:d.se||null,activo_fijo:d.af||null});
    if(eq.length)await Q(SB.from('equipos').insert(eq));
    await Q(SB.from('ordenes').update({estado:'cerrada'}).eq('id',id));d.sync=true;save()}
-  if(!cur)msg=''}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}
+  if(!cur)msg='';try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}
  if(!cur)paint()}
 document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.dataset.up!==undefined)UP[+e.target.dataset.up].tec=e.target.value});
 window.addEventListener('online',sync);

@@ -1,1 +1,1 @@
-{"appId":"bo.voicewave.boletas","appName":"Boletas AXS","webDir":"www"}
+{"appId": "bo.voicewave.boletas", "appName": "Boletas AXS", "webDir": "www", "server": {"url": "https://suuzuaw.github.io/boletas-voicew/", "cleartext": false}}
