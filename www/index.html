@@ -162,7 +162,9 @@ function cerrar(){const o=O(cur),d=D(cur);msg='';
 
 document.addEventListener('click',e=>{
  const f=e.target.closest('.f');
- if(f&&cur&&sh.hidden){const fl=C[pg].F[+f.dataset.i];return fl[5]==='cq'?croq(e,f,fl):openEd(fl)}
+ if(f&&cur){const i0=f.dataset.i,fl=C[pg].F[+i0];let el=f;
+  if(!sh.hidden){if(ed&&!pend&&!['x','sel'].includes(ed[5]))okEd();else closeEd();el=document.querySelector('.f[data-i="'+i0+'"]')||f}
+  return fl[5]==='cq'?croq(e,el,fl):openEd(fl)}
  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,d=cur?D(cur):null,i=document.getElementById('ei');
  if(a==='open'){cur=b.dataset.id;pg=O(cur).forms[0];msg='';shots=[];tool='';sel=null;paint();scrollTo(0,0)}
  else if(a==='back'){cur=null;closeEd();paint()}
