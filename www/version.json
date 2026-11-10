@@ -1,1 +1,1 @@
-{"ver": "1.6", "cambios": ["Ya funcionan los botones \"Ir a la ODN\" e \"Ir al NAP\": abren Google Maps con la ubicación."]}
+{"ver": "1.7", "cambios": ["Nueva sección \"Datos de acceso\" en la Ficha (Port, Pass, VPI, VCI, Nodo…). Toca un dato para copiarlo.", "La boleta roja ahora tiene las casillas SI/NO y el voltaje.", "Se quitaron los botones Llamar e Ir a la ODN."]}
