@@ -1,1 +1,1 @@
-{"ver": "1.5", "cambios": ["Nueva pestaña Ficha con el cliente, la dirección, el teléfono con botón de WhatsApp, la ruta asignada y el croquis.", "Enlaces para ir a la ODN y al NAP cuando su ubicación esté cargada.", "Las boletas se agrupan por día de asignación con la hora y el minuto.", "Se muestra la fecha y hora de la última sincronización."]}
+{"ver": "1.6", "cambios": ["Ya funcionan los botones \"Ir a la ODN\" e \"Ir al NAP\": abren Google Maps con la ubicación."]}
