@@ -1,1 +1,1 @@
-{"ver": "1.7", "cambios": ["Nueva sección \"Datos de acceso\" en la Ficha (Port, Pass, VPI, VCI, Nodo…). Toca un dato para copiarlo.", "La boleta roja ahora tiene las casillas SI/NO y el voltaje.", "Se quitaron los botones Llamar e Ir a la ODN."]}
+{"ver": "1.8", "cambios": ["El formulario rojo se completa con lo que ya llenaste en la boleta azul: equipo, serie, activo fijo, cliente, técnico, fecha, hora y firma del cliente."]}

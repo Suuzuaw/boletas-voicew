@@ -190,7 +190,7 @@ document.addEventListener('click',e=>{
  else if(a==='mot'){d.motivo=b.dataset.v;closeEd();cerrar()}
  else if(a==='clr'){const c=document.getElementById('sg');c.getContext('2d').clearRect(0,0,c.width,c.height);sgs=2}
  else if(a==='ok')okEd();else if(a==='x')closeEd();
- else if(a==='login')doLogin();else if(a==='adm'){cargarAdmin().then(paint)}else if(a==='subir')subir();else if(a==='mae')document.getElementById('fm').click();
+ else if(a==='login')doLogin();else if(a==='adm'){cargarAdmin().then(paint)}else if(a==='subir')subir();else if(a==='mae')document.getElementById('fm').click();else if(a==='rojo')document.getElementById('fr').click();
  else if(a==='del'){modal('¿Eliminar la boleta '+b.dataset.ot+'?',[b.dataset.st==='cerrada'?'Esta boleta ya fue cerrada por el técnico: también se borrarán sus materiales y datos.':'Se quitará de la lista del técnico y se borrarán sus archivos.'],'<button class="btn alt" data-a="mdx">Cancelar</button><button class="btn" data-a="delok" data-ot="'+b.dataset.ot+'">Eliminar</button>')}
  else if(a==='delok')eliminar(b.dataset.ot);
  else if(a==='cp'){try{navigator.clipboard.writeText(b.dataset.v)}catch(e){}const t=b.innerHTML;b.innerHTML='<b>Copiado ✓</b>';setTimeout(()=>{b.innerHTML=t},1200)}else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
@@ -204,7 +204,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.7",CHANGES=["Nueva sección \"Datos de acceso\" en la Ficha (Port, Pass, VPI, VCI, Nodo…). Toca un dato para copiarlo.", "La boleta roja ahora tiene las casillas SI/NO y el voltaje.", "Se quitaron los botones Llamar e Ir a la ODN."];
+const APP_VER="1.8",CHANGES=["El formulario rojo se completa con lo que ya llenaste en la boleta azul: equipo, serie, activo fijo, cliente, técnico, fecha, hora y firma del cliente."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -278,6 +278,22 @@ function parseMaestro(tx){const rows=[],seen=new Set(),U='\\s+https?:\\/\\/(?:ww
  while((m=rs.exec(tx))){const odn=m[1].replace('-','').toUpperCase(),nap=m[2].toUpperCase(),k='N|'+odn+'|'+nap;if(seen.has(k))continue;seen.add(k);rows.push({tipo:'NAP',olt:null,odn,nap,lat:+m[3],lon:+m[4],descripcion:null})}
  return rows}
 
+function fl(o){const f=o.fondos||{};return /Baja|Desinstal/i.test(o.etiqueta||'')?'':' · Azul '+(f.pex?'✓':'—')+' · Rojo '+(f.inst?'✓':'—')}
+async function rojo(files){msg='Cargando formularios rojos, puede tardar…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let vin=0,esp=0;
+ try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+  for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tc=await p.getTextContent(),tx=tc.items.map(t=>t.str).join(' '),ot=(tx.match(/\b(?!OT-)[A-Z]{2}-\d{4,6}\b/)||[])[0];
+   if(!/Formulario de Instalaci/i.test(tx)||!ot)continue;
+   const H=p.getViewport({scale:1}).height,vp=p.getViewport({scale:1.7}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+   await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+   const path=ot+'/inst.jpg',fx=extraer(tc.items,H,'inst'),ac=extraerAcceso(tc.items,H);
+   await Q(SB.storage.from('boletas').upload(path,blob(cv.toDataURL('image/jpeg',.78)),{upsert:true,contentType:'image/jpeg'}));
+   const ex=(await Q(SB.from('ordenes').select('id,fondos').eq('ot',ot).maybeSingle())).data,dat={fondos:{...((ex&&ex.fondos)||{}),inst:path}};
+   if(Object.keys(ac).length)dat.datos_tecnicos=ac;
+   if(ex){await Q(SB.from('ordenes').update(dat).eq('id',ex.id));vin++}
+   else{await Q(SB.from('ordenes').insert({ot,tipo:'instalacion',etiqueta:'Instalación fibra',cliente:fx.cliente||null,direccion:fx.direccion||null,telefono:fx.telefono||null,...dat}));esp++}}}
+  msg='✓ Formularios rojos cargados: '+vin+' vinculados a boletas ya cargadas y '+esp+' en espera de su boleta azul.';await cargarAdmin()}
+ catch(e){msg='No se pudo cargar: '+(e.message||e)}
+ paint()}
 async function eliminar(ot){document.getElementById('md').hidden=true;msg='Eliminando…';paint();
  try{const o=(await Q(SB.from('ordenes').select('fondos,croquis_path').eq('ot',ot).maybeSingle())).data,ps=o?[...Object.values(o.fondos||{}),o.croquis_path].filter(Boolean):[];
   if(ps.length)await Q(SB.storage.from('boletas').remove(ps));
@@ -294,11 +310,11 @@ async function maestro(file){msg='Leyendo el maestro, puede tardar un poco…';p
  catch(e){msg='No se pudo cargar el maestro: '+(e.message||e)}
  paint()}
 let UP=[],TEC=[],ADM=[],NN=0;
-async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let n=0;
+async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let n=0,ign=0;
  try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
   for(let i=1;i<=pdf.numPages;i++){const p=await pdf.getPage(i),tc=await p.getTextContent(),tx=tc.items.map(t=>t.str).join(' ');
    const form=/FORMULARIO BAJAS/i.test(tx)?'baja':/FORMULARIO PEX/i.test(tx)?'pex':/Formulario de Instalaci/i.test(tx)?'inst':'',ot=(tx.match(/\b(?!OT-)[A-Z]{2}-\d{4,6}\b/)||[])[0];
-   if(!form||!ot)continue;
+   if(!form||!ot)continue;if(form==='inst'){ign++;continue}
    const vp=p.getViewport({scale:1.7}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
    await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
    let u=UP.find(x=>x.ot===ot);if(!u)UP.push(u={ot,forms:{},cliente:'',label:'',tipoDb:'instalacion',tec:''});
@@ -307,10 +323,10 @@ async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOpt
    if(form==='pex'){const c2=document.createElement('canvas'),k=1.7;c2.width=395*k;c2.height=262*k;c2.getContext('2d').drawImage(cv,158*k,253*k,395*k,262*k,0,0,395*k,262*k);u.croquis=c2.toDataURL('image/jpeg',.82)}
    const m=tx.match(/NOMBRE CLIENTE\s+(.+?)\s+DIRECCION/)||tx.match(/NOMBRES DEL CONTACTO \(s\)\s+(.+?)\s+DIRECCION/);if(m&&!u.cliente)u.cliente=m[1].trim();
    if(form==='baja'){u.tipoDb=/MASIVA/i.test(tx)?'baja_masiva':/^VS/.test(ot)?'baja_xdsl':'baja_fibra';u.label=/MASIVA/i.test(tx)?'Baja masiva':'Desinstalación fibra'}else u.label='Instalación fibra';n++}}
-  msg=n?'':'No se reconoció ninguna boleta AXS en esos PDF.'}catch(e){msg='No se pudo leer el PDF.'}
+  msg=(n?'':'No se reconoció ninguna boleta AXS en esos PDF.')+(ign?(n?'':' ')+'Las boletas rojas se cargan con el botón "Cargar formulario rojo".':'')}catch(e){msg='No se pudo leer el PDF.'}
  paint()}
 async function cargarAdmin(){try{TEC=(await Q(SB.from('tecnicos').select('id,nombre').eq('rol','tecnico').eq('activo',true).order('nombre'))).data||[];
- ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en').order('asignada_en',{ascending:false}).limit(60))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
+ ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en,fondos').order('asignada_en',{ascending:false}).limit(60))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
 async function subir(){msg='Subiendo…';paint();let n=0;
  try{for(const u of UP){if(!u.tec)continue;const fondos={};
   const ex=(await Q(SB.from('ordenes').select('fondos').eq('ot',u.ot).maybeSingle())).data;
@@ -319,11 +335,11 @@ async function subir(){msg='Subiendo…';paint();let n=0;
   await Q(SB.from('ordenes').upsert({ot:u.ot,tipo:u.tipoDb,...fic(u,cp),etiqueta:u.label,tecnico_id:u.tec,fondos:{...((ex&&ex.fondos)||{}),...fondos},estado:'asignada',asignada_en:new Date().toISOString(),fecha_asignacion:new Date().toISOString().slice(0,10)},{onConflict:'ot'}));n++}
   UP=UP.filter(u=>!u.tec);msg=n?'':'Elige un técnico para cada boleta.';await cargarAdmin()}catch(e){msg='Error al subir: '+(e.message||e)}
  paint()}
-const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Cargar PDF</button><button data-a="mae">Cargar maestro</button><button data-a="adm">Actualizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden><input id="fm" type="file" accept="application/pdf" hidden><p class="mut">Última actualización: <b>${lastSync()}</b></p><p class="mut">Ubicaciones de ODN y NAP cargadas: <b>${NN}</b></p>`;
+const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="imp">Cargar PDF</button><button data-a="rojo">Cargar formulario rojo</button><button data-a="mae">Cargar maestro</button><button data-a="adm">Actualizar</button><button data-a="out">Salir</button></div><input id="fi" type="file" accept="application/pdf" multiple hidden><input id="fr" type="file" accept="application/pdf" multiple hidden><input id="fm" type="file" accept="application/pdf" hidden><p class="mut">Última actualización: <b>${lastSync()}</b></p><p class="mut">Ubicaciones de ODN y NAP cargadas: <b>${NN}</b></p>`;
  if(msg)h+=`<div class="msg">${msg}</div>`;
  if(UP.length){h+='<h3>Por asignar</h3>';UP.forEach((u,i)=>h+=`<div class="card" style="cursor:default"><div class="row"><b>${u.ot}</b><span class="mut">${u.label} · ${Object.keys(u.forms).join(', ')}</span></div><div>${esc(u.cliente)}</div><select data-up="${i}"><option value="">Elegir técnico…</option>${TEC.map(t=>`<option value="${t.id}"${u.tec===t.id?' selected':''}>${esc(t.nombre)}</option>`).join('')}</select></div>`);h+='<button class="btn" data-a="subir">Subir y asignar</button>'}
  h+='<h3>Boletas cargadas</h3>';if(!ADM.length)h+='<p class="mut">Todavía no hay boletas.</p>';
- let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div><div style="text-align:right"><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
+ let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${fl(o)}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div><div style="text-align:right"><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
  return h};
 async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en,telefono,direccion,olt,odn,nap,po,plan_velocidad,distancia_factibilidad,cable_instalado_asignado,croquis_path,datos_tecnicos').neq('estado','cerrada'))).data||[],ord=['pex','inst','baja'];
  for(const r of rows){let o=ORD.find(x=>x.id===r.ot);const forms=Object.keys(r.fondos||{}).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
@@ -354,7 +370,7 @@ async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;
    await Q(SB.from('ordenes').update({estado:'cerrada'}).eq('id',id));d.sync=true;save()}
   if(!cur)msg='';try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}
  if(!cur)paint()}
-document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.id==='fm'){maestro(e.target.files[0]);e.target.value=''}else if(e.target.dataset.up!==undefined)UP[+e.target.dataset.up].tec=e.target.value});
+document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.id==='fm'){maestro(e.target.files[0]);e.target.value=''}else if(e.target.id==='fr'){rojo(e.target.files);e.target.value=''}else if(e.target.dataset.up!==undefined)UP[+e.target.dataset.up].tec=e.target.value});
 window.addEventListener('online',sync);
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
 boot();
