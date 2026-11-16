@@ -68,7 +68,8 @@ let ORD=[];
 const MOT=['Cliente no contactado','Nadie en el lugar','Cliente se negó','Otro'];
 let DB={},tec='',me=null,BG={},cur=null,pg=null,zm=1.8,tool='',shots=[],msg='',ed=null,sgs=0,pend=null,sel=null,drag=null;
 try{DB=JSON.parse(localStorage.getItem('boletas_v2')||'{}')}catch(e){DB={}}
-try{ORD=JSON.parse(localStorage.getItem('ord_v1')||'[]')}catch(e){ORD=[]}
+function dedup(a){const m=new Map();a.forEach(o=>{const e=m.get(o.id);if(!e)m.set(o.id,o);else{if((o.forms||[]).length>(e.forms||[]).length)e.forms=o.forms;e.dbid=e.dbid||o.dbid;e.asig=e.asig||o.asig;e.f=e.f||o.f;e.acc=e.acc||o.acc;e.link=e.link||o.link;e.cliente=e.cliente||o.cliente}});return [...m.values()]}
+try{ORD=dedup(JSON.parse(localStorage.getItem('ord_v1')||'[]'));localStorage.setItem('ord_v1',JSON.stringify(ORD))}catch(e){ORD=[]}
 const save=()=>{try{localStorage.setItem('boletas_v2',JSON.stringify(DB))}catch(e){}};
 const D=id=>DB[id]||(DB[id]={m:{},mk:[],estado:'asignada',empresa:'Voicewave',tecnico:tec});
 const O=id=>ORD.find(o=>o.id===id);
@@ -83,7 +84,7 @@ function val(f,d){const k=f[0],t=f[5];if(t==='mat')return d.m[f[6]]||'';if(t==='
 
 function lista(){let h=`<div class="top row"><h1>Mis boletas</h1><span class="mut">${esc(tec)}</span></div><div class="tb"><button data-a="sync">Sincronizar</button><button data-a="out">Salir</button></div>
 <p class="mut">Última sincronización: <b>${lastSync()}</b></p>`;
- let lk='';[...ORD].sort((a,b)=>(b.asig||'').localeCompare(a.asig||'')).forEach(o=>{const k=o.asig?dkey(o.asig):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asig):'Sin fecha'}</h3>`}h+=`<button class="card" data-a="open" data-id="${o.id}"><div class="row"><b style="font-size:18px">${o.id}</b>${chip(D(o.id).estado)}</div><div>${esc(o.cliente)}</div><div class="mut">${o.label}${o.asig?' · asignada a las '+fmtHora(o.asig):''}</div></button>`});
+ let lk='';dedup(ORD).sort((a,b)=>(b.asig||'').localeCompare(a.asig||'')).forEach(o=>{const k=o.asig?dkey(o.asig):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asig):'Sin fecha'}</h3>`}h+=`<button class="card" data-a="open" data-id="${o.id}"><div class="row"><b style="font-size:18px">${o.id}</b>${chip(D(o.id).estado)}</div><div>${esc(o.cliente)}</div><div class="mut">${o.label}${o.asig?' · asignada a las '+fmtHora(o.asig):''}</div></button>`});
  return h+(ORD.length?'':'<p class="mut">Aún no tienes boletas asignadas. Toca “Sincronizar” con internet para recibirlas.</p>')+(msg?`<div class="msg">${msg}</div>`:'')}
 
 function pageHTML(){const F=C[pg],d=D(cur);let h=`<div class="page" style="width:${zm*100}%;aspect-ratio:${F.w}/${F.h};background-image:url(${BG[cur+'|'+pg]||''})">`;
@@ -238,7 +239,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.12",CHANGES=["Nuevas boletas: Instalación Axs+, Traslado externo, Traslado externo mismos datos y Baja traslado.", "En Axs+ y en la baja traslado, el nombre y la firma del cliente se copian de la boleta combo.", "En los traslados no se llena el equipo.", "Puedes pegar la firma del cliente a partir de una foto: botón \"Usar foto de la firma\"."];
+const APP_VER="1.13",CHANGES=["Se corrigió que las boletas aparecieran repetidas en la lista."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -375,7 +376,7 @@ async function maestro(file){msg='Leyendo el maestro, puede tardar un poco…';p
   NN=rows.length;msg='✓ Maestro cargado: '+rows.filter(r=>r.tipo==='ODN').length+' ODN y '+rows.filter(r=>r.tipo==='NAP').length+' NAP.'}
  catch(e){msg='No se pudo cargar el maestro: '+(e.message||e)}
  paint()}
-let UP=[],TEC=[],ADM=[],NN=0;
+let UP=[],TEC=[],ADM=[],NN=0,syncing=false,again=false;
 async function cambiarFecha(ot,v){document.getElementById('md').hidden=true;const dt=new Date(v);if(!v||isNaN(dt))return;const z=n=>String(n).padStart(2,'0');
  try{await Q(SB.from('ordenes').update({asignada_en:dt.toISOString(),fecha_asignacion:dt.getFullYear()+'-'+z(dt.getMonth()+1)+'-'+z(dt.getDate())}).eq('ot',ot));msg='✓ Fecha de asignación actualizada.';await cargarAdmin()}
  catch(e){msg='No se pudo cambiar la fecha: '+(e.message||e)}
@@ -430,14 +431,14 @@ async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,
   for(const f of forms){if(BG[r.ot+'|'+f]&&o&&o.dbid)continue;const b=(await Q(SB.storage.from('boletas').download(r.fondos[f]))).data;
    const u=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|'+f]=u;await idbPut(r.ot+'|'+f,u)}
   if(r.croquis_path&&!BG[r.ot+'|croquis']){const b=(await Q(SB.storage.from('boletas').download(r.croquis_path))).data;const c=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|croquis']=c;await idbPut(r.ot+'|croquis',c)}
-  if(!o)ORD.push(o={id:r.ot,tipo:r.tipo.startsWith('baja')?'baja':'instalacion',label:'',cliente:'',forms:[]});
+  o=o||ORD.find(x=>x.id===r.ot);if(!o)ORD.push(o={id:r.ot,tipo:r.tipo.startsWith('baja')?'baja':'instalacion',label:'',cliente:'',forms:[]});
   o.forms=forms;o.dbid=r.id;o.asig=r.asignada_en;o.f={dir:r.direccion,tel:r.telefono,olt:r.olt,odn:r.odn,nap:r.nap,po:r.po,plan:r.plan_velocidad,dist:r.distancia_factibilidad,cable:r.cable_instalado_asignado};o.acc=r.datos_tecnicos;o.link=(r.datos_tecnicos||{}).enlace||'';o.label=r.etiqueta||o.label;o.cliente=r.cliente||o.cliente}
  {const keep=new Set(rows.map(r=>r.ot));ORD=ORD.filter(o=>keep.has(o.id)||D(o.id).estado==='cerrada');if(cur&&!ORD.find(o=>o.id===cur)){cur=null;pg=null}}
  try{await nodos([...new Set(rows.map(r=>r.odn).filter(Boolean))])}catch(e){}
  localStorage.setItem('ord_v1',JSON.stringify(ORD))}
 const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
 const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
-async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;
+async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;
  try{await pull();const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
   for(const o of ORD){const d=D(o.id);if(d.estado!=='cerrada'||d.sync)continue;
    const id=o.dbid;if(!id)continue;
@@ -453,7 +454,7 @@ async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;
    for(let r=0;r<4;r++)if(d['am'+r]||d['as'+r]||d['aa'+r])eq.push({orden_id:id,sentido:'instalado',tipo:'Axs+',modelo:d['am'+r]||null,serie:d['as'+r]||null,activo_fijo:d['aa'+r]||null});
    if(eq.length)await Q(SB.from('equipos').insert(eq));
    await Q(SB.from('ordenes').update({estado:'cerrada'}).eq('id',id));d.sync=true;save()}
-  if(!cur)msg='';try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}
+  if(!cur)msg='';try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}finally{syncing=false;if(again){again=false;setTimeout(sync,300)}}
  if(!cur)paint()}
 document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.id==='fm'){maestro(e.target.files[0]);e.target.value=''}else if(e.target.id==='fr'){rojo(e.target.files);e.target.value=''}else if(e.target.id==='ffoto'){fotoFirma(e.target.files[0])}else if(e.target.dataset.up!==undefined){const u=UP[+e.target.dataset.up];u.tec=e.target.value;UP.forEach(x=>{if(x!==u&&!x.tec&&(x.enlace===u.ot||u.enlace===x.ot))x.tec=u.tec});paint()}});
 window.addEventListener('online',sync);

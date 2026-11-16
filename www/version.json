@@ -1,1 +1,1 @@
-{"ver": "1.12", "cambios": ["Nuevas boletas: Instalación Axs+, Traslado externo, Traslado externo mismos datos y Baja traslado.", "En Axs+ y en la baja traslado, el nombre y la firma del cliente se copian de la boleta combo.", "En los traslados no se llena el equipo.", "Puedes pegar la firma del cliente a partir de una foto: botón \"Usar foto de la firma\"."]}
+{"ver": "1.13", "cambios": ["Se corrigió que las boletas aparecieran repetidas en la lista."]}
