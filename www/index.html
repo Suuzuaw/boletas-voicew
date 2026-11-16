@@ -226,6 +226,8 @@ document.addEventListener('click',e=>{
  else if(a==='delok')eliminar(b.dataset.ot);
  else if(a==='chf'){const dd=b.dataset.d?new Date(b.dataset.d):new Date(),z=n=>String(n).padStart(2,'0'),v=dd.getFullYear()+'-'+z(dd.getMonth()+1)+'-'+z(dd.getDate())+'T'+z(dd.getHours())+':'+z(dd.getMinutes());
   modal('Cambiar fecha de '+b.dataset.ot,['Elige el día y la hora de asignación.','<input type="datetime-local" id="nf" value="'+v+'">'],'<button class="btn alt" data-a="mdx">Cancelar</button><button class="btn" data-a="chfok" data-ot="'+b.dataset.ot+'">Guardar</button>')}
+ else if(a==='tel')modal('Teléfono de '+b.dataset.ot,['Escribe el número del cliente. Celular boliviano de 8 dígitos (con o sin +591).','<input type="tel" id="nt" inputmode="numeric" placeholder="Ej.: 70012345" value="'+(b.dataset.t||'')+'">'],'<button class="btn alt" data-a="mdx">Cancelar</button><button class="btn" data-a="telok" data-ot="'+b.dataset.ot+'">Guardar</button>');
+ else if(a==='telok')guardarTel(b.dataset.ot,document.getElementById('nt').value);
  else if(a==='chfok')cambiarFecha(b.dataset.ot,document.getElementById('nf').value);
  else if(a==='foto')document.getElementById('ffoto').click();
  else if(a==='cp'){try{navigator.clipboard.writeText(b.dataset.v)}catch(e){}const t=b.innerHTML;b.innerHTML='<b>Copiado ✓</b>';setTimeout(()=>{b.innerHTML=t},1200)}else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
@@ -239,7 +241,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.13",CHANGES=["Se corrigió que las boletas aparecieran repetidas en la lista."];
+const APP_VER="1.14",CHANGES=["El administrador puede agregar el teléfono del cliente cuando la boleta no lo trae; aparece en la Ficha con su botón de WhatsApp."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -354,8 +356,8 @@ async function rojo(files){msg='Cargando formularios rojos, puede tardar…';pai
    await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
    const path=ot+'/inst.jpg',fx=extraer(tc.items,H,'inst'),ac=extraerAcceso(tc.items,H);
    await Q(SB.storage.from('boletas').upload(path,blob(cv.toDataURL('image/jpeg',.78)),{upsert:true,contentType:'image/jpeg'}));
-   const ex=(await Q(SB.from('ordenes').select('id,fondos').eq('ot',ot).maybeSingle())).data,dat={fondos:{...((ex&&ex.fondos)||{}),inst:path}};
-   if(Object.keys(ac).length)dat.datos_tecnicos=ac;
+   const ex=(await Q(SB.from('ordenes').select('id,fondos,telefono').eq('ot',ot).maybeSingle())).data,dat={fondos:{...((ex&&ex.fondos)||{}),inst:path}};
+   if(Object.keys(ac).length)dat.datos_tecnicos=ac;if(ex&&!ex.telefono&&fx.telefono)dat.telefono=fx.telefono;
    if(ex){await Q(SB.from('ordenes').update(dat).eq('id',ex.id));vin++}
    else{await Q(SB.from('ordenes').insert({ot,tipo:'instalacion',etiqueta:'Instalación fibra',cliente:fx.cliente||null,direccion:fx.direccion||null,telefono:fx.telefono||null,...dat}));esp++}}}
   msg='✓ Formularios rojos cargados: '+vin+' vinculados a boletas ya cargadas y '+esp+' en espera de su boleta azul.';await cargarAdmin()}
@@ -377,6 +379,11 @@ async function maestro(file){msg='Leyendo el maestro, puede tardar un poco…';p
  catch(e){msg='No se pudo cargar el maestro: '+(e.message||e)}
  paint()}
 let UP=[],TEC=[],ADM=[],NN=0,syncing=false,again=false;
+async function guardarTel(ot,v){document.getElementById('md').hidden=true;let n=String(v||'').replace(/\D/g,'');if(n.startsWith('591'))n=n.slice(3);n=n.replace(/^0+/,'');
+ if(n.length<7||n.length>8){msg='Número no válido: debe tener 7 u 8 dígitos.';paint();return}
+ try{await Q(SB.from('ordenes').update({telefono:n}).eq('ot',ot));msg='✓ Teléfono guardado. El técnico lo verá al sincronizar.';await cargarAdmin()}
+ catch(e){msg='No se pudo guardar el teléfono: '+(e.message||e)}
+ paint()}
 async function cambiarFecha(ot,v){document.getElementById('md').hidden=true;const dt=new Date(v);if(!v||isNaN(dt))return;const z=n=>String(n).padStart(2,'0');
  try{await Q(SB.from('ordenes').update({asignada_en:dt.toISOString(),fecha_asignacion:dt.getFullYear()+'-'+z(dt.getMonth()+1)+'-'+z(dt.getDate())}).eq('ot',ot));msg='✓ Fecha de asignación actualizada.';await cargarAdmin()}
  catch(e){msg='No se pudo cambiar la fecha: '+(e.message||e)}
@@ -407,7 +414,7 @@ async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOpt
  catch(e){msg='No se pudo leer el PDF.'}
  paint()}
 async function cargarAdmin(){try{TEC=(await Q(SB.from('tecnicos').select('id,nombre').eq('rol','tecnico').eq('activo',true).order('nombre'))).data||[];
- ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en,fondos').not('tecnico_id','is',null).order('asignada_en',{ascending:false}).limit(200))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
+ ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en,fondos,telefono').not('tecnico_id','is',null).order('asignada_en',{ascending:false}).limit(200))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
 async function subir(){msg='Subiendo…';paint();let n=0;
  try{for(const u of UP){if(!u.tec)continue;const fondos={};
   if(u.forms.baja&&/B$/.test(u.ot)){const bs=u.ot.replace(/B$/,''),b=(await Q(SB.from('ordenes').select('etiqueta').eq('ot',bs).maybeSingle())).data;if(b&&/^Traslado externo/.test(b.etiqueta||''))convBajaUP(u,{ot:bs,label:b.etiqueta})}
@@ -424,7 +431,7 @@ const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="
  if(msg)h+=`<div class="msg">${msg}</div>`;
  if(UP.length){h+='<h3>Por asignar</h3>';UP.forEach((u,i)=>h+=`<div class="card" style="cursor:default"><div class="row"><b>${u.ot}</b><span class="mut">${u.label}${u.enlace?' · combo con '+u.enlace:''}</span></div><div>${esc(u.cliente)}</div><select data-up="${i}"><option value="">Elegir técnico…</option>${TEC.map(t=>`<option value="${t.id}"${u.tec===t.id?' selected':''}>${esc(t.nombre)}</option>`).join('')}</select></div>`);h+='<button class="btn" data-a="subir">Subir y asignar</button>'}
  h+='<h3>Boletas cargadas</h3>';if(!ADM.length)h+='<p class="mut">Todavía no hay boletas.</p>';
- let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${fl(o)}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div> <div style="text-align:right"><button class="back" data-a="chf" data-ot="${o.ot}" data-d="${o.asignada_en||''}">Cambiar fecha</button><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
+ let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${fl(o)}${o.telefono?' · Tel. '+esc(o.telefono):' · Sin teléfono'}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div> <div style="text-align:right"><button class="back" data-a="tel" data-ot="${o.ot}" data-t="${o.telefono||''}">${o.telefono?'Cambiar teléfono':'Agregar teléfono'}</button><button class="back" data-a="chf" data-ot="${o.ot}" data-d="${o.asignada_en||''}">Cambiar fecha</button><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
  return h};
 async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en,telefono,direccion,olt,odn,nap,po,plan_velocidad,distancia_factibilidad,cable_instalado_asignado,croquis_path,datos_tecnicos').neq('estado','cerrada'))).data||[],ord=['pex','pexT','axs','inst','baja','bajaT'];
  for(const r of rows){let o=ORD.find(x=>x.id===r.ot);const forms=Object.keys(r.fondos||{}).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
