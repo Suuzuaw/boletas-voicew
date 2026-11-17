@@ -70,8 +70,9 @@ let DB={},tec='',me=null,BG={},cur=null,pg=null,zm=1.8,tool='',shots=[],msg='',e
 try{DB=JSON.parse(localStorage.getItem('boletas_v2')||'{}')}catch(e){DB={}}
 function dedup(a){const m=new Map();a.forEach(o=>{const e=m.get(o.id);if(!e)m.set(o.id,o);else{if((o.forms||[]).length>(e.forms||[]).length)e.forms=o.forms;e.dbid=e.dbid||o.dbid;e.asig=e.asig||o.asig;e.f=e.f||o.f;e.acc=e.acc||o.acc;e.link=e.link||o.link;e.cliente=e.cliente||o.cliente}});return [...m.values()]}
 try{ORD=dedup(JSON.parse(localStorage.getItem('ord_v1')||'[]'));localStorage.setItem('ord_v1',JSON.stringify(ORD))}catch(e){ORD=[]}
-const save=()=>{try{localStorage.setItem('boletas_v2',JSON.stringify(DB))}catch(e){}};
-const D=id=>DB[id]||(DB[id]={m:{},mk:[],estado:'asignada',empresa:'Voicewave',tecnico:tec});
+const persist=()=>{try{localStorage.setItem('boletas_v2',JSON.stringify(DB))}catch(e){}};
+const save=()=>{if(cur&&DB[cur])stamp(DB[cur]);persist();schedPush()};
+const D=id=>DB[id]||(DB[id]=base({m:{},mk:[],estado:'asignada',empresa:'Voicewave',tecnico:tec}));
 const O=id=>ORD.find(o=>o.id===id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const app=document.getElementById('app'),sh=document.getElementById('sh');
@@ -241,7 +242,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.14",CHANGES=["El administrador puede agregar el teléfono del cliente cuando la boleta no lo trae; aparece en la Ficha con su botón de WhatsApp."];
+const APP_VER="1.15",CHANGES=["Sincronización automática: tus cambios se guardan solos y se ven en otros dispositivos con la misma cuenta.", "Si cambias la misma boleta en dos dispositivos, los cambios se combinan."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -378,6 +379,36 @@ async function maestro(file){msg='Leyendo el maestro, puede tardar un poco…';p
   NN=rows.length;msg='✓ Maestro cargado: '+rows.filter(r=>r.tipo==='ODN').length+' ODN y '+rows.filter(r=>r.tipo==='NAP').length+' NAP.'}
  catch(e){msg='No se pudo cargar el maestro: '+(e.message||e)}
  paint()}
+function canon(v){return v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canon).join(',')+']':'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}'}
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h}
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
+const SKIPK=new Set(['_t','_s','_f','eq']);
+function flat(d){const f={};for(const k in d){if(SKIPK.has(k))continue;if(k==='m'){for(const n in d.m)f['m:'+n]=d.m[n]}else if(k==='mk'){(d.mk||[]).forEach(m=>{if(!m.id)m.id=uid();f['k:'+m.id]=m})}else f[k]=d[k]}return f}
+function base(d){d._t={};d._s={};d._f={};const f=flat(d);for(const k in f)d._f[k]=hash(canon(f[k]));return d}
+function stamp(d){const leg=!d._f;d._t=d._t||{};d._s=d._s||{};d._f=d._f||{};const f=flat(d),now=Date.now();
+ for(const k in f){const h=hash(canon(f[k]));if(d._f[k]!==h){d._f[k]=h;d._t[k]=leg?1:now}}
+ for(const k in d._f){if(!(k in f)&&d._f[k]!=='x'){d._f[k]='x';d._t[k]=leg?1:now}}}
+function setKey(d,k,v){if(k.startsWith('m:')){const n=k.slice(2);d.m=d.m||{};if(v==null)delete d.m[n];else d.m[n]=v}
+ else if(k.startsWith('k:')){const id=k.slice(2);d.mk=d.mk||[];const i=d.mk.findIndex(x=>x.id===id);if(v==null){if(i>=0)d.mk.splice(i,1)}else if(i>=0)d.mk[i]=v;else d.mk.push(v)}
+ else if(v==null)delete d[k];else d[k]=v}
+function applyRemote(d,r){d._t=d._t||{};d._s=d._s||{};d._f=d._f||{};const rt=r.ts||{},rd=r.datos||{},ks=[];
+ for(const k in rt){d._s[k]=Math.max(d._s[k]||0,rt[k]);if(rt[k]>(d._t[k]||0)){setKey(d,k,rd[k]);d._t[k]=rt[k];ks.push(k)}}
+ if(ks.length){const f=flat(d);ks.forEach(k=>{d._f[k]=(k in f)?hash(canon(f[k])):'x'})}return ks.length>0}
+function dirty(d){const f=flat(d),ch={},ts={};for(const k in d._t)if(d._t[k]>(d._s[k]||0)){ch[k]=(k in f)?f[k]:null;ts[k]=d._t[k]}return {ch,ts}}
+
+let pushT=null;function schedPush(){clearTimeout(pushT);pushT=setTimeout(autoDraft,2500)}
+async function draftSync(){let chg=false;const live=ORD.filter(o=>o.dbid);live.forEach(o=>stamp(D(o.id)));
+ for(const o of live){const d=D(o.id),{ch,ts}=dirty(d);
+  if(Object.keys(ts).length){const r=(await Q(SB.rpc('mergear_borrador',{p_orden:o.dbid,p_datos:ch,p_ts:ts}))).data;if(applyRemote(d,r)&&o.id===cur)chg=true}}
+ let since='';try{since=localStorage.getItem('bp')||''}catch(e){}
+ let q=SB.from('borradores').select('orden_id,datos,ts,updated_at');if(since)q=q.gt('updated_at',since);
+ const rows=(await Q(q)).data||[];let mx=since;
+ for(const r of rows){if(r.updated_at>mx)mx=r.updated_at;const o=live.find(x=>x.dbid===r.orden_id);if(o&&applyRemote(D(o.id),r)&&o.id===cur)chg=true}
+ if(mx&&mx!==since){try{localStorage.setItem('bp',new Date(new Date(mx).getTime()-5000).toISOString())}catch(e){}}
+ persist();return chg}
+async function autoDraft(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;let chg=false;
+ try{chg=await draftSync()}catch(e){}finally{syncing=false;if(again){again=false;setTimeout(sync,300)}}
+ if(chg&&cur&&sh.hidden){sel=null;paint()}}
 let UP=[],TEC=[],ADM=[],NN=0,syncing=false,again=false;
 async function guardarTel(ot,v){document.getElementById('md').hidden=true;let n=String(v||'').replace(/\D/g,'');if(n.startsWith('591'))n=n.slice(3);n=n.replace(/^0+/,'');
  if(n.length<7||n.length>8){msg='Número no válido: debe tener 7 u 8 dígitos.';paint();return}
@@ -446,10 +477,10 @@ async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,
 const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
 const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
 async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;
- try{await pull();const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
+ try{await pull();if(await draftSync()&&cur&&sh.hidden){sel=null;paint()}const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
   for(const o of ORD){const d=D(o.id);if(d.estado!=='cerrada'||d.sync)continue;
    const id=o.dbid;if(!id)continue;
-   const dt={...d};for(const k of ['firma','firmaT','firmaW'])for(const z of ['','S'])delete dt[k+z];
+   const dt={...d};for(const k of ['firma','firmaT','firmaW'])for(const z of ['','S'])delete dt[k+z];delete dt._t;delete dt._s;delete dt._f;
    await Q(SB.from('cierres').upsert({orden_id:id,empresa:d.empresa,tecnico_id:me.id,tecnico_2:d.tecnico2||null,fecha_ejecucion:d.fecha||null,hora_inicio:d.hi||null,hora_fin:d.hf||null,distancia_cable_texto:d.dist||null,potencia_nap:nu(d.pNap),potencia_usuario:nu(d.pUsu),postes_utilizados:nu(d.postes),postes_equipados:nu(d.postesEq),apoyo_mensajero:nu(d.mensajero),observacion:d.obs||d.nota||d.obsF||null,nombre_cliente:d.cliente||null,motivo_sin_firma:d.motivo||null,ruta_mod_olt:d.rOlt||null,ruta_mod_odn:d.rOdn||null,ruta_mod_nap:d.rNap||null,ruta_mod_po:d.rPo||null,datos:dt}));
    await Q(SB.from('materiales_usados').delete().eq('orden_id',id));
    const mu=Object.keys(d.m).filter(k=>ids[k]).map(k=>({orden_id:id,material_id:ids[k],cantidad:d.m[k]}));if(mu.length)await Q(SB.from('materiales_usados').insert(mu));
@@ -466,6 +497,7 @@ async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if
 document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.id==='fm'){maestro(e.target.files[0]);e.target.value=''}else if(e.target.id==='fr'){rojo(e.target.files);e.target.value=''}else if(e.target.id==='ffoto'){fotoFirma(e.target.files[0])}else if(e.target.dataset.up!==undefined){const u=UP[+e.target.dataset.up];u.tec=e.target.value;UP.forEach(x=>{if(x!==u&&!x.tec&&(x.enlace===u.ot||u.enlace===x.ot))x.tec=u.tec});paint()}});
 window.addEventListener('online',sync);
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
+setInterval(()=>{if(!document.hidden)sync()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 boot();
 </script>
 </body>
