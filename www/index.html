@@ -110,7 +110,7 @@ function detalle(){const o=O(cur),d=D(cur),fs=o.forms;heredar(o);if(pg==='ficha'
  h+=`</div></div><div class="wrap" id="wr">${pageHTML()}</div>`;
  if(msg)h+=`<div class="msg">${msg}</div>`;
  shots.forEach(s=>h+=`<h3>${s.n}</h3><img class="out" src="${s.u}" alt="${s.n}">`);
- if(shots.length)h+='<p class="mut">Mantén presionada cada imagen para guardarla o enviarla al grupo de Teams.</p><button class="btn alt" data-a="share">Compartir</button>';
+ if(shots.length)h+='<button class="btn" data-a="dl">Descargar boletas</button><p class="mut">También puedes mantener presionada una imagen para guardarla.</p><button class="btn alt" data-a="share">Compartir</button>';
  return h+barra()}
 
 function paint(){const w=document.getElementById('wr'),sx=w?w.scrollLeft:0,sy=w?w.scrollTop:0,py=scrollY;
@@ -189,6 +189,14 @@ async function exportar(){shots=[];msg='';const d=D(cur);
   shots.push({n:NM[f],u:cv.toDataURL('image/jpeg',.95)})}
  paint();scrollTo(0,document.body.scrollHeight)}
 function blob(u){const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return new Blob([a],{type:'image/jpeg'})}
+async function descargar(){const P=window.Capacitor&&window.Capacitor.Plugins,id=O(cur).id,nom=s=>id+' '+s.n.replace(/[^\w áéíóúñÁÉÍÓÚÑ-]/g,'');msg='';
+ if(P&&P.Media){try{const nm='Boletas',gl=async()=>((await P.Media.getAlbums()).albums||[]).find(a=>a.name===nm);let al=await gl();if(!al){await P.Media.createAlbum({name:nm});al=await gl()}
+   const alb=al?al.identifier:(await P.Media.getAlbumsPath()).path+'/'+nm;
+   for(const s of shots)await P.Media.savePhoto({path:s.u,albumIdentifier:alb,fileName:nom(s)});
+   msg='✓ Boletas guardadas en tu galería, en el álbum "Boletas".';paint();return}
+  catch(e){msg='No se pudo guardar en la galería. Usa Compartir para guardarlas.';paint();return}}
+ for(const s of shots){const a=document.createElement('a');a.href=s.u;a.download=nom(s)+'.jpg';document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,400))}
+ msg='✓ Boletas descargadas.';paint()}
 async function compartir(){try{const P=window.Capacitor&&window.Capacitor.Plugins;if(P&&P.Share&&P.Filesystem){const u=[];for(const s of shots){const r=await P.Filesystem.writeFile({path:O(cur).id+' '+s.n+'.jpg',data:s.u.split(',')[1],directory:'CACHE'});u.push(r.uri)}await P.Share.share({files:u,title:O(cur).id});return}await navigator.share({files:shots.map(s=>new File([blob(s.u)],O(cur).id+' '+s.n+'.jpg',{type:'image/jpeg'})),title:O(cur).id})}catch(e){msg='No se pudo abrir Compartir aquí. Mantén presionada cada imagen para guardarla.';paint()}}
 
 function cerrar(){const o=O(cur),d=D(cur);msg='';
@@ -232,7 +240,7 @@ document.addEventListener('click',e=>{
  else if(a==='chfok')cambiarFecha(b.dataset.ot,document.getElementById('nf').value);
  else if(a==='foto')document.getElementById('ffoto').click();
  else if(a==='cp'){try{navigator.clipboard.writeText(b.dataset.v)}catch(e){}const t=b.innerHTML;b.innerHTML='<b>Copiado ✓</b>';setTimeout(()=>{b.innerHTML=t},1200)}else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync()}else if(a==='out'){SB.auth.signOut();me=null;paint()}
- else if(a==='img')exportar();else if(a==='share')compartir();else if(a==='close')cerrar()});
+ else if(a==='img')exportar();else if(a==='share')compartir();else if(a==='dl')descargar();else if(a==='close')cerrar()});
 document.addEventListener('pointerdown',e=>{const m=e.target.closest('.mk');if(!m||!cur||tool==='Borrar')return;
  const f=m.closest('.f');drag={i:+m.dataset.mi,m,f,fl:C[pg].F[+f.dataset.i],mv:false,sx:e.clientX,sy:e.clientY};sel=drag.i;m.setPointerCapture(e.pointerId);e.preventDefault()});
 document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>5)drag.mv=true;if(!drag.mv)return;
@@ -242,7 +250,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.15",CHANGES=["Sincronización automática: tus cambios se guardan solos y se ven en otros dispositivos con la misma cuenta.", "Si cambias la misma boleta en dos dispositivos, los cambios se combinan."];
+const APP_VER="1.16",CHANGES=["Nuevo botón \"Descargar boletas\": guarda la boleta azul y la roja en la galería (álbum Boletas) o las descarga en la web.", "Ahora ves tus boletas cerradas de los últimos 7 días en cualquier dispositivo con tu cuenta.", "La sincronización sigue aunque una boleta falle, y muestra el motivo si algo no se pudo enviar."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
@@ -260,7 +268,11 @@ const idbAll=async()=>{const d=await idb();return new Promise(r=>{const o={},q=d
 const login=()=>`<div class="top"><h1>Boletas AXS</h1></div><div class="card" style="cursor:default"><div class="mut">Nombre</div><input id="em" type="text" autocomplete="username" autocapitalize="none" placeholder="Ej.: Ovidio"><div class="mut" style="margin-top:8px">Contraseña</div><input id="pw" type="password" autocomplete="current-password"><button class="btn" style="margin-top:12px" data-a="login">Entrar</button>${msg?`<div class="msg">${msg}</div>`:''}</div>`;
 const slug=s=>s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/)[0];
 async function doLogin(){msg='';const r=await SB.auth.signInWithPassword({email:slug(document.getElementById('em').value)+'@voicewave.app',password:document.getElementById('pw').value});if(r.error){msg='Nombre o contraseña incorrectos, o no hay internet.';paint();return}await boot()}
-async function boot(){BG=await idbAll();const s=(await SB.auth.getSession()).data.session;
+async function wipeLocal(){DB={};ORD=[];BG={};for(const k of ['boletas_v2','ord_v1','nodos_v1','bp','nom','rol','last_sync'])try{localStorage.removeItem(k)}catch(e){}
+ try{const d=await idb();await new Promise(r=>{const t=d.transaction('bg','readwrite');t.objectStore('bg').clear();t.oncomplete=r;t.onerror=r})}catch(e){}}
+async function boot(){const s=(await SB.auth.getSession()).data.session;
+ if(s){let last='';try{last=localStorage.getItem('uid')||''}catch(e){}if(last&&last!==s.user.id)await wipeLocal();try{localStorage.setItem('uid',s.user.id)}catch(e){}}
+ BG=await idbAll();
  if(s){me={id:s.user.id,rol:localStorage.getItem('rol')||'tecnico'};tec=localStorage.getItem('nom')||s.user.email;
   try{const r=await SB.from('tecnicos').select('nombre,rol').eq('id',s.user.id).maybeSingle();if(r.error)throw r.error;
    if(!r.data){await SB.auth.signOut();me=null;msg='Usuario no autorizado.'}else{tec=r.data.nombre;me.rol=r.data.rol;localStorage.setItem('nom',tec);localStorage.setItem('rol',me.rol)}}catch(e){}}
@@ -348,6 +360,8 @@ async function descargarExcel(){msg='Generando Excel…';paint();
   await bajar(wb,'Boletas_Voicewave_'+new Date().toISOString().slice(0,10)+'.xlsx');msg='✓ Excel generado con '+(ins.length+baj.length)+' boletas cerradas.'}
  catch(e){msg='No se pudo generar el Excel: '+(e.message||e)}
  paint()}
+function est(o){const b=Array.isArray(o.borradores)?o.borradores[0]:o.borradores;return o.estado==='cerrada'?'cerrada':b?'en_proceso':'asignada'}
+function ult(o){const b=Array.isArray(o.borradores)?o.borradores[0]:o.borradores,c=Array.isArray(o.cierres)?o.cierres[0]:o.cierres,t=[b&&b.updated_at,c&&c.updated_at].filter(Boolean).sort().pop();return t?' · último cambio '+fmtFH(t):''}
 function fl(o){const f=o.fondos||{};return /^Instalación fibra/.test(o.etiqueta||'')?' · Azul '+(f.pex?'✓':'—')+' · Rojo '+(f.inst?'✓':'—'):''}
 async function rojo(files){msg='Cargando formularios rojos, puede tardar…';paint();pdfjsLib.GlobalWorkerOptions.workerSrc='pdf.worker.min.js';let vin=0,esp=0;
  try{for(const f of files){const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
@@ -409,7 +423,7 @@ async function draftSync(){let chg=false;const live=ORD.filter(o=>o.dbid);live.f
 async function autoDraft(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;let chg=false;
  try{chg=await draftSync()}catch(e){}finally{syncing=false;if(again){again=false;setTimeout(sync,300)}}
  if(chg&&cur&&sh.hidden){sel=null;paint()}}
-let UP=[],TEC=[],ADM=[],NN=0,syncing=false,again=false;
+let UP=[],TEC=[],ADM=[],NN=0,syncing=false,again=false,ERR='';
 async function guardarTel(ot,v){document.getElementById('md').hidden=true;let n=String(v||'').replace(/\D/g,'');if(n.startsWith('591'))n=n.slice(3);n=n.replace(/^0+/,'');
  if(n.length<7||n.length>8){msg='Número no válido: debe tener 7 u 8 dígitos.';paint();return}
  try{await Q(SB.from('ordenes').update({telefono:n}).eq('ot',ot));msg='✓ Teléfono guardado. El técnico lo verá al sincronizar.';await cargarAdmin()}
@@ -445,7 +459,7 @@ async function leer(files){msg='Leyendo PDF…';paint();pdfjsLib.GlobalWorkerOpt
  catch(e){msg='No se pudo leer el PDF.'}
  paint()}
 async function cargarAdmin(){try{TEC=(await Q(SB.from('tecnicos').select('id,nombre').eq('rol','tecnico').eq('activo',true).order('nombre'))).data||[];
- ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en,fondos,telefono').not('tecnico_id','is',null).order('asignada_en',{ascending:false}).limit(200))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
+ ADM=(await Q(SB.from('ordenes').select('ot,cliente,etiqueta,estado,tecnico_id,asignada_en,fondos,telefono,borradores(updated_at),cierres(updated_at)').not('tecnico_id','is',null).order('asignada_en',{ascending:false}).limit(200))).data||[];NN=(await SB.from('red_nodos').select('id',{count:'exact',head:true})).count||0;try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo actualizar la lista.'}}
 async function subir(){msg='Subiendo…';paint();let n=0;
  try{for(const u of UP){if(!u.tec)continue;const fondos={};
   if(u.forms.baja&&/B$/.test(u.ot)){const bs=u.ot.replace(/B$/,''),b=(await Q(SB.from('ordenes').select('etiqueta').eq('ot',bs).maybeSingle())).data;if(b&&/^Traslado externo/.test(b.etiqueta||''))convBajaUP(u,{ot:bs,label:b.etiqueta})}
@@ -462,9 +476,9 @@ const admin=()=>{let h=`<div class="top row"><h1>Administrador</h1><span class="
  if(msg)h+=`<div class="msg">${msg}</div>`;
  if(UP.length){h+='<h3>Por asignar</h3>';UP.forEach((u,i)=>h+=`<div class="card" style="cursor:default"><div class="row"><b>${u.ot}</b><span class="mut">${u.label}${u.enlace?' · combo con '+u.enlace:''}</span></div><div>${esc(u.cliente)}</div><select data-up="${i}"><option value="">Elegir técnico…</option>${TEC.map(t=>`<option value="${t.id}"${u.tec===t.id?' selected':''}>${esc(t.nombre)}</option>`).join('')}</select></div>`);h+='<button class="btn" data-a="subir">Subir y asignar</button>'}
  h+='<h3>Boletas cargadas</h3>';if(!ADM.length)h+='<p class="mut">Todavía no hay boletas.</p>';
- let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(o.estado)}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${fl(o)}${o.telefono?' · Tel. '+esc(o.telefono):' · Sin teléfono'}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div> <div style="text-align:right"><button class="back" data-a="tel" data-ot="${o.ot}" data-t="${o.telefono||''}">${o.telefono?'Cambiar teléfono':'Agregar teléfono'}</button><button class="back" data-a="chf" data-ot="${o.ot}" data-d="${o.asignada_en||''}">Cambiar fecha</button><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
+ let lk='';ADM.forEach(o=>{const t=TEC.find(x=>x.id===o.tecnico_id),k=o.asignada_en?dkey(o.asignada_en):'';if(k!==lk){lk=k;h+=`<h3>${k?fmtDia(o.asignada_en):'Sin fecha'}</h3>`}h+=`<div class="card" style="cursor:default"><div class="row"><b>${o.ot}</b>${chip(est(o))}</div><div>${esc(o.cliente||'')}</div><div class="mut">${esc(o.etiqueta||'')} · ${t?esc(t.nombre):'Sin técnico'}${fl(o)}${o.telefono?' · Tel. '+esc(o.telefono):' · Sin teléfono'}${ult(o)}${o.asignada_en?' · asignada a las '+fmtHora(o.asignada_en):''}</div> <div style="text-align:right"><button class="back" data-a="tel" data-ot="${o.ot}" data-t="${o.telefono||''}">${o.telefono?'Cambiar teléfono':'Agregar teléfono'}</button><button class="back" data-a="chf" data-ot="${o.ot}" data-d="${o.asignada_en||''}">Cambiar fecha</button><button class="back" data-a="del" data-ot="${o.ot}" data-st="${o.estado}">Eliminar</button></div></div>`});
  return h};
-async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en,telefono,direccion,olt,odn,nap,po,plan_velocidad,distancia_factibilidad,cable_instalado_asignado,croquis_path,datos_tecnicos').neq('estado','cerrada'))).data||[],ord=['pex','pexT','axs','inst','baja','bajaT'];
+async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,cliente,etiqueta,estado,fondos,asignada_en,telefono,direccion,olt,odn,nap,po,plan_velocidad,distancia_factibilidad,cable_instalado_asignado,croquis_path,datos_tecnicos').or('estado.neq.cerrada,asignada_en.gte.'+new Date(Date.now()-7*864e5).toISOString()))).data||[],ord=['pex','pexT','axs','inst','baja','bajaT'];
  for(const r of rows){let o=ORD.find(x=>x.id===r.ot);const forms=Object.keys(r.fondos||{}).sort((a,b)=>ord.indexOf(a)-ord.indexOf(b));
   for(const f of forms){if(BG[r.ot+'|'+f]&&o&&o.dbid)continue;const b=(await Q(SB.storage.from('boletas').download(r.fondos[f]))).data;
    const u=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)});BG[r.ot+'|'+f]=u;await idbPut(r.ot+'|'+f,u)}
@@ -476,9 +490,9 @@ async function pull(){const rows=(await Q(SB.from('ordenes').select('id,ot,tipo,
  localStorage.setItem('ord_v1',JSON.stringify(ORD))}
 const nu=v=>v===undefined||v===''||isNaN(parseFloat(v))?null:parseFloat(v);
 const Q=async p=>{const r=await p;if(r.error)throw r.error;return r};
-async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;
- try{await pull();if(await draftSync()&&cur&&sh.hidden){sel=null;paint()}const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
-  for(const o of ORD){const d=D(o.id);if(d.estado!=='cerrada'||d.sync)continue;
+async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if(syncing){again=true;return}syncing=true;ERR='';
+ try{try{await pull()}catch(e){ERR='Recibir boletas: '+(e.message||e)}try{if(await draftSync()&&cur&&sh.hidden){sel=null;paint()}}catch(e){ERR=ERR||'Guardar cambios: '+(e.message||e)}const ids={};((await Q(SB.from('materiales_catalogo').select('id,nombre'))).data||[]).forEach(c=>ids[c.nombre]=c.id);
+  for(const o of ORD){const d=D(o.id);if(d.estado!=='cerrada'||d.sync)continue;try{
    const id=o.dbid;if(!id)continue;
    const dt={...d};for(const k of ['firma','firmaT','firmaW'])for(const z of ['','S'])delete dt[k+z];delete dt._t;delete dt._s;delete dt._f;
    await Q(SB.from('cierres').upsert({orden_id:id,empresa:d.empresa,tecnico_id:me.id,tecnico_2:d.tecnico2||null,fecha_ejecucion:d.fecha||null,hora_inicio:d.hi||null,hora_fin:d.hf||null,distancia_cable_texto:d.dist||null,potencia_nap:nu(d.pNap),potencia_usuario:nu(d.pUsu),postes_utilizados:nu(d.postes),postes_equipados:nu(d.postesEq),apoyo_mensajero:nu(d.mensajero),observacion:d.obs||d.nota||d.obsF||null,nombre_cliente:d.cliente||null,motivo_sin_firma:d.motivo||null,ruta_mod_olt:d.rOlt||null,ruta_mod_odn:d.rOdn||null,ruta_mod_nap:d.rNap||null,ruta_mod_po:d.rPo||null,datos:dt}));
@@ -491,13 +505,13 @@ async function sync(){if(!me||me.rol==='supervisor'||!navigator.onLine)return;if
    else if(d.mo||d.se||d.af)eq.push({orden_id:id,sentido:'instalado',tipo:d.mo||null,modelo:d.mo||null,serie:d.se||null,activo_fijo:d.af||null});
    for(let r=0;r<4;r++)if(d['am'+r]||d['as'+r]||d['aa'+r])eq.push({orden_id:id,sentido:'instalado',tipo:'Axs+',modelo:d['am'+r]||null,serie:d['as'+r]||null,activo_fijo:d['aa'+r]||null});
    if(eq.length)await Q(SB.from('equipos').insert(eq));
-   await Q(SB.from('ordenes').update({estado:'cerrada'}).eq('id',id));d.sync=true;save()}
-  if(!cur)msg='';try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}finally{syncing=false;if(again){again=false;setTimeout(sync,300)}}
+   await Q(SB.from('ordenes').update({estado:'cerrada'}).eq('id',id));d.sync=true;save()}catch(e){ERR=ERR||'Enviar '+o.id+': '+(e.message||e)}}
+  if(!cur)msg=ERR?'Sincronización incompleta. '+ERR:'';if(!ERR)try{localStorage.setItem('last_sync',new Date().toISOString())}catch(e){}}catch(e){msg='No se pudo sincronizar todavía. Se reintentará cuando haya internet.'}finally{syncing=false;if(again){again=false;setTimeout(sync,300)}}
  if(!cur)paint()}
 document.addEventListener('change',e=>{if(e.target.id==='fi'){leer(e.target.files);e.target.value=''}else if(e.target.id==='fm'){maestro(e.target.files[0]);e.target.value=''}else if(e.target.id==='fr'){rojo(e.target.files);e.target.value=''}else if(e.target.id==='ffoto'){fotoFirma(e.target.files[0])}else if(e.target.dataset.up!==undefined){const u=UP[+e.target.dataset.up];u.tec=e.target.value;UP.forEach(x=>{if(x!==u&&!x.tec&&(x.enlace===u.ot||u.enlace===x.ot))x.tec=u.tec});paint()}});
 window.addEventListener('online',sync);
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
-setInterval(()=>{if(!document.hidden)sync()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+setInterval(()=>{if(document.hidden)return;if(me&&me.rol==='supervisor'){if(document.getElementById('md').hidden)cargarAdmin().then(paint)}else sync()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 boot();
 </script>
 </body>
