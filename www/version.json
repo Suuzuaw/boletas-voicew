@@ -1,1 +1,1 @@
-{"ver": "1.18", "cambios": ["El botón \"Descargar boletas\" ahora funciona en la app: guarda las boletas en la galería (álbum \"Boletas\").", "El administrador puede ver el contenido de cualquier boleta, en cualquier estado."]}
+{"ver": "1.19", "cambios": ["Barra de progreso al sincronizar: muestra el porcentaje, cuántos archivos se descargaron y cuánto falta.", "Las boletas se descargan de a cuatro a la vez, mucho más rápido al iniciar sesión en un dispositivo nuevo."]}
