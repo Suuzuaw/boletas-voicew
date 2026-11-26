@@ -1,1 +1,1 @@
-{"ver": "1.20", "cambios": ["En las boletas Axs+ (TS) ya se puede llenar la cantidad de PILAS AAA.", "El comentario que escribes en la boleta PEX se copia al formulario de instalación.", "Los comentarios ahora se escriben sobre las líneas punteadas, ya no en medio de ellas."]}
+{"ver": "1.21", "cambios": ["Ahora se ve el número de versión al pie de la pantalla.", "El botón \"Actualizar ahora\" siempre trae la versión más reciente, sin usar datos guardados."]}

@@ -115,7 +115,7 @@ function detalle(){const o=O(cur),d=D(cur),fs=o.forms;heredar(o);if(pg==='ficha'
  return h+barra()}
 
 function paint(){const w=document.getElementById('wr'),sx=w?w.scrollLeft:0,sy=w?w.scrollTop:0,py=scrollY;
- app.innerHTML=!me?login():cur?detalle():me.rol==='supervisor'?admin():lista();const n=document.getElementById('wr');if(n){n.scrollLeft=sx;n.scrollTop=sy}scrollTo(0,py)}
+ app.innerHTML=(!me?login():cur?detalle():me.rol==='supervisor'?admin():lista())+(cur?'':`<p class="mut" style="text-align:center;margin:24px 0 8px">Versión ${APP_VER}</p>`);const n=document.getElementById('wr');if(n){n.scrollLeft=sx;n.scrollTop=sy}scrollTo(0,py)}
 
 function openEd(fl){const[k,,,,,t,l]=fl,d=D(cur),T=TY(t);ed=fl;sgs=0;let b='';
  if(T==='mat')b=`<div class="step"><button data-a="m-">−</button><input id="ei" type="number" inputmode="decimal" min="0" value="${d.m[l]||''}"><button data-a="m+">+</button></div>`;
@@ -242,7 +242,7 @@ document.addEventListener('click',e=>{
  else if(a==='telok')guardarTel(b.dataset.ot,document.getElementById('nt').value);
  else if(a==='chfok')cambiarFecha(b.dataset.ot,document.getElementById('nf').value);
  else if(a==='foto')document.getElementById('ffoto').click();
- else if(a==='cp'){try{navigator.clipboard.writeText(b.dataset.v)}catch(e){}const t=b.innerHTML;b.innerHTML='<b>Copiado ✓</b>';setTimeout(()=>{b.innerHTML=t},1200)}else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){caches.keys().then(k=>Promise.all(k.map(x=>caches.delete(x)))).then(()=>location.reload())}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync(true)}else if(a==='out'){rtStop();SB.auth.signOut();me=null;paint()}
+ else if(a==='cp'){try{navigator.clipboard.writeText(b.dataset.v)}catch(e){}const t=b.innerHTML;b.innerHTML='<b>Copiado ✓</b>';setTimeout(()=>{b.innerHTML=t},1200)}else if(a==='mdx')document.getElementById('md').hidden=true;else if(a==='mdok'){document.getElementById('md').hidden=true;try{localStorage.setItem('ver_seen',APP_VER)}catch(e){}}else if(a==='upd'){(async()=>{try{for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}try{for(const k of await caches.keys())await caches.delete(k)}catch(e){}location.replace(location.pathname+'?v='+Date.now())})()}else if(a==='imp')document.getElementById('fi').click();else if(a==='sync'){msg=navigator.onLine?'':'Sin conexión a internet.';paint();sync(true)}else if(a==='out'){rtStop();SB.auth.signOut();me=null;paint()}
  else if(a==='img')exportar();else if(a==='share')compartir();else if(a==='dl')descargar();else if(a==='ver')verBoleta(b.dataset.ot);else if(a==='close')cerrar()});
 document.addEventListener('pointerdown',e=>{const m=e.target.closest('.mk');if(!m||!cur||tool==='Borrar'||me.rol==='supervisor')return;
  const f=m.closest('.f');drag={i:+m.dataset.mi,m,f,fl:C[pg].F[+f.dataset.i],mv:false,sx:e.clientX,sy:e.clientY};sel=drag.i;m.setPointerCapture(e.pointerId);e.preventDefault()});
@@ -253,7 +253,7 @@ document.addEventListener('pointermove',e=>{if(!drag)return;if(Math.abs(e.client
 const endDrag=()=>{if(!drag)return;drag=null;save();paint()};
 document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
 document.addEventListener('change',e=>{if(e.target.dataset.a==='who'){tec=e.target.value;paint()}});
-const APP_VER="1.20",CHANGES=["En las boletas Axs+ (TS) ya se puede llenar la cantidad de PILAS AAA.", "El comentario que escribes en la boleta PEX se copia al formulario de instalación.", "Los comentarios ahora se escriben sobre las líneas punteadas, ya no en medio de ellas."];
+const APP_VER="1.21",CHANGES=["Ahora se ve el número de versión al pie de la pantalla.", "El botón \"Actualizar ahora\" siempre trae la versión más reciente, sin usar datos guardados."];
 const fmtDia=i=>new Date(i).toLocaleDateString('es-BO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const fmtHora=i=>new Date(i).toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit',hour12:false});
 const fmtFH=i=>new Date(i).toLocaleString('es-BO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false});
