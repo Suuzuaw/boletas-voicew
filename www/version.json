@@ -1,1 +1,1 @@
-{"ver": "1.21", "cambios": ["Ahora se ve el número de versión al pie de la pantalla.", "El botón \"Actualizar ahora\" siempre trae la versión más reciente, sin usar datos guardados."]}
+{"ver": "1.22", "cambios": ["Nuevo estado \"Suspendida\": el administrador indica el motivo y el técnico lo ve en su boleta.", "El administrador puede cambiar el estado de cualquier boleta asignada.", "Ya no es obligatoria la firma del cliente para cerrar una boleta."]}
