@@ -1,1 +1,1 @@
-{"ver": "1.22", "cambios": ["Nuevo estado \"Suspendida\": el administrador indica el motivo y el técnico lo ve en su boleta.", "El administrador puede cambiar el estado de cualquier boleta asignada.", "Ya no es obligatoria la firma del cliente para cerrar una boleta."]}
+{"ver": "1.23", "cambios": ["Las boletas que el administrador marca como cerradas ahora aparecen cerradas en tu lista y se envían sus datos."]}
